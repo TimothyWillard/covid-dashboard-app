@@ -33,6 +33,10 @@
     "react-scripts": "^5.0.1",
     "typescript": "^3.9.6"
   },
+  "overrides": {
+    "nth-check": "^2.0.1",
+    "postcss": "^8.4.31"
+  },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
