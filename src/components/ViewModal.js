@@ -5,7 +5,7 @@ function ViewModal(prop) {
   return (
     <Modal
       title={prop.modalTitle}
-      visible={prop.modalVisible}
+      open={prop.modalVisible}
       onCancel={prop.onCancel}
       footer={null}
       getContainer={prop.modalContainer}

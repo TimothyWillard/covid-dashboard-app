@@ -143,7 +143,7 @@ class Map extends Component {
                 <Tooltip
                     key={`tooltip-county-boundary-${i}`}
                     title={tooltipText}
-                    visible={hoveredCounty === d.properties.geoid}
+                    open={hoveredCounty === d.properties.geoid}
                     data-html="true"
                     destroyTooltipOnHide={true}
                 >

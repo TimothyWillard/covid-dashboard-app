@@ -274,8 +274,8 @@ class Chart extends Component {
                                     <Tooltip
                                         key={`tooltip-chart-${i}-${j}`}
                                         title={tooltipText}
-                                        visible={hoveredRect.severity === severity &&
-                                                hoveredRect.scenario === scenario ? true : false}
+                                        open={hoveredRect.severity === severity &&
+                                              hoveredRect.scenario === scenario ? true : false}
                                         data-html="true"
                                         destroyTooltipOnHide={true}
                                     >

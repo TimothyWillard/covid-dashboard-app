@@ -366,7 +366,7 @@ class Graph extends Component {
                         <Tooltip
                             key={`sim-tooltip`}
                             title={this.state.tooltipText}
-                            visible={this.state.hoveredSimPathId ? true : false}
+                            open={this.state.hoveredSimPathId ? true : false}
                             // visible={true}
                             // align={{
                             //     points: ['bc', 'tc'],        // align top left point of sourceNode with top right point of targetNode

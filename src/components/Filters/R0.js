@@ -103,7 +103,7 @@ class R0 extends Component {
                             max={maxR0} 
                             step={step}
                             included={true}
-                            tooltipVisible={false}
+                            tooltipOpen={false}
                             defaultValue={r0selected}
                             value={r0selected}
                             onChange={this.handleChange} />
