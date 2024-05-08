@@ -3,7 +3,7 @@ import { geoPath, geoMercator, geoTransverseMercator, geoConicConformal, geoAlbe
 import { scaleLinear } from 'd3-scale';
 import { max } from 'd3-array';
 import { zoom, zoomIdentity } from 'd3-zoom';
-import { select, event } from 'd3-selection';
+import { select } from 'd3-selection';
 import _ from 'lodash';
 import { Tooltip } from 'antd';
 import Axis from '../Graph/Axis';
@@ -219,7 +219,7 @@ class Map extends Component {
         this.setState({ hoveredCounty: null, countyIsHovered: false })
     }
 
-    zoomed = () => {
+    zoomed = (event) => {
         this.props.handleZoom(event)
     }
 

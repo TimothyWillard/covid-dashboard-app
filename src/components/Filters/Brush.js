@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import { axisBottom } from 'd3-axis'
 import { scaleLinear, scaleUtc } from 'd3-scale'
-import { select, event } from 'd3-selection'
+import { select } from 'd3-selection'
 import { line } from 'd3-shape'
 import { timeFormat } from 'd3-time-format'
 import { brushX, brushSelection } from 'd3-brush'
@@ -177,19 +177,19 @@ class Brush extends Component {
     return { xScale, yScale }
 }
 
-  brushed = () => {
+  brushed = (event) => {
     const selection = event.selection;
     if (selection === null) {
       return;
     }
-    if (event.selection && event.sourceEvent !== null) {
+    if (event.selection && event.sourceEvent != null) {
       const [x1, x2] = event.selection;
       const range = [this.state.scales.xScale.invert(x1), this.state.scales.xScale.invert(x2)];
       this.props.onBrushChange(range);
     }
   }
 
-  brushEnded = () => {
+  brushEnded = (event) => {
     if (!event.selection && this.brushRef.current) {
       const selection = brushSelection(this.brushRef.current) ? null : this.state.scales.xScale.range();
       select(this.brushRef.current).call(this.brush.move, selection)

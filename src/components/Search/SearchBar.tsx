@@ -58,7 +58,7 @@ class SearchBar extends Component<Props, State> {
         if (typeof event === 'string') {
             this.setState({ geoidName: GEOIDS[event] })
         } else {
-            console.log(`handleCountySelect(): unexpected event=${event.toString()}`)
+            console.log(`handleCountySelect(): unexpected event=${event?.toString()}`)
         }
     };
 
@@ -72,7 +72,10 @@ class SearchBar extends Component<Props, State> {
                 size={"large"}
                 onChange={this.handleCountySelect}
                 filterOption={(input, option) =>
-                    option?.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                    option == null 
+                        ? false 
+                        : (option.props.children.toLowerCase().indexOf(input.toLowerCase()) >= 0 
+                            || option.props.value.toLowerCase().indexOf(input.toLowerCase()) >= 0)
                 }>
                 {this.state.children.map(county => county.button)}
             </Select>
