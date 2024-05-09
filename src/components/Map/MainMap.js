@@ -24,9 +24,8 @@ class MainMap extends Component {
             SCENARIOS: [],
             scenario: '',         
             dateSliderActiveMap: false,
-            indicatorsForMap: {},
-            countyBoundaries: {},
             indicatorsForCounty: {},
+            countyBoundaries: {},
             currentDateIndex: 0,
             modalVisible: false,
             firstModalVisit: true,
@@ -39,11 +38,11 @@ class MainMap extends Component {
         const { dataset } = this.props;
         try {
             const indicatorsForMap = await fetchConfig('statsForMap');
-            const countyBoundaries = await fetchConfig('countyBoundaries');
+            const stateBoundaries = await fetchConfig('countyBoundaries');
 
             this.setState({
                 indicatorsForMap,
-                countyBoundaries
+                stateBoundaries
             });
             this.initializeMap(dataset)
         } catch (e) {
@@ -68,12 +67,13 @@ class MainMap extends Component {
 
     initializeMap(dataset) {
         const { geoid } = this.props;
-        const { indicatorsForMap, countyBoundaries } = this.state;
+        console.log(geoid);
+        const { indicatorsForMap, stateBoundaries } = this.state;
         const state = geoid.slice(0, 2);
 
         if (Object.keys(dataset).length > 0 &&
             Object.keys(indicatorsForMap).length > 0 &&
-            Object.keys(countyBoundaries).length > 0 
+            Object.keys(stateBoundaries).length > 0 
         ) {
             // instantiate scenarios and dates
             const SCENARIOS = buildScenarios(dataset);
@@ -93,14 +93,14 @@ class MainMap extends Component {
                 SCENARIOS,
                 scenario,
                 indicatorsForCounty: indicatorsForMap[state],
-                countyBoundaries: countyBoundaries[state],
+                countyBoundaries: stateBoundaries[state],
                 currentDateIndex,
                 dataLoaded: true
             });
         } else {
             if (Object.keys(dataset).length === 0) console.log('Map Error: Dataset is empty');
             if (Object.keys(indicatorsForMap).length === 0) console.log('Map Error: indicatorsForMap is empty');
-            if (Object.keys(countyBoundaries).length === 0) console.log('Map Error: countyBoundaries is empty');
+            if (Object.keys(stateBoundaries).length === 0) console.log('Map Error: stateBoundaries is empty');
         }
     }
 
