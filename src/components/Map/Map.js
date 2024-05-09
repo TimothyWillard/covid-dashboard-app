@@ -34,6 +34,7 @@ class Map extends Component {
             .scaleExtent([1,9])
             .on('zoom', this.zoomed);
     }
+
     componentDidMount() {
         const gradientH = (this.props.width - gradientMargin) / 2;
         this.setState({ gradientH }, () => this.calculateScales());
@@ -58,7 +59,7 @@ class Map extends Component {
     }
 
     componentWillUnmount() {
-        window.removeEventListener('scroll')
+        window.removeEventListener('scroll', this.handleWindowScrollTooltip)
     }
 
     calculateScales = () => {
