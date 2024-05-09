@@ -24,8 +24,8 @@ class MainMap extends Component {
             SCENARIOS: [],
             scenario: '',         
             dateSliderActiveMap: false,
-            indicatorsForCounty: {},
             countyBoundaries: {},
+            indicatorsForCounty: {},
             currentDateIndex: 0,
             modalVisible: false,
             firstModalVisit: true,
@@ -67,7 +67,6 @@ class MainMap extends Component {
 
     initializeMap(dataset) {
         const { geoid } = this.props;
-        console.log(geoid);
         const { indicatorsForMap, stateBoundaries } = this.state;
         const state = geoid.slice(0, 2);
 
