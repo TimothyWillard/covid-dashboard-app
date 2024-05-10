@@ -1,6 +1,7 @@
-import { React } from 'react';
+import React from 'react';
 import { Layout, Col } from 'antd';
 import { styles } from '../utils/constants';
+
 const { Content } = Layout;
 
 export default function Methodology() {
