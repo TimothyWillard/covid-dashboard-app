@@ -149,4 +149,13 @@ export function formatNavBar(s) {
   return s.replace(' responsive', '');
 }
 
+export function getStepValue(seriesMax) {
+  if (seriesMax <= 50) {
+    return 1;
+  } else if (seriesMax <= 1000) {
+    return 10;
+  }
+  return 100;
+}
+
 export const getReadableDate = timeFormat('%b %d, %Y');
