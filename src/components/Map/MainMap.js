@@ -26,6 +26,7 @@ class MainMap extends Component {
             dateSliderActiveMap: false,
             stateBoundaries: {},
             indicatorsForCounty: {},
+            indicatorsForMap: {},
             currentDateIndex: 0,
             modalVisible: false,
             firstModalVisit: true,
@@ -116,7 +117,6 @@ class MainMap extends Component {
     }
 
     handleModalCancel = (e) => {
-        // console.log(e);
         this.setState({
             modalVisible: false,
             firstModalVisit: false,
@@ -130,7 +130,7 @@ class MainMap extends Component {
     }
 
     handleScroll = (e) => {
-        if(this.scrollElemMap.current && this.state.firstModalVisit && 
+        if (this.scrollElemMap.current && this.state.firstModalVisit && 
             (document.body.scrollTop > this.scrollElemMap.current.offsetTop - 60 && 
                 document.body.scrollTop < this.scrollElemMap.current.offsetTop)) {
             this.setState({
