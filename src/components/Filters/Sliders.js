@@ -1,4 +1,5 @@
-import React, { Component, useState, useRef } from 'react';
+import React, { useState } from 'react';
+// import React, { Component, useState, useRef } from 'react';
 import { InfoCircleTwoTone } from '@ant-design/icons';
 import TooltipHandler from '../Filters/TooltipHandler';
 import { addCommas } from '../../utils/utils.js';
@@ -9,19 +10,6 @@ import { getStepValue } from '../../utils/utils';
 
 const getDate = timeFormat('%b %d, %Y');
 const getMonth = timeFormat('%b %d');
-
-{/* <Sliders 
-                                indicator={this.state.indicator}
-                                selectedDates={this.state.selectedDates}
-                                seriesMax={this.state.seriesMax}
-                                showConfBounds={this.state.showConfBounds}
-                                indicatorThreshold={this.state.indicatorThreshold}
-                                dateThreshold={this.state.dateThreshold}
-                                dateThresholdIdx={this.state.dateThresholdIdx}
-                                dateRange={this.state.dateRange}
-                                onStatSliderChange={this.handleStatSliderChange}
-                                onDateSliderChange={this.handleDateSliderChange}
-                                onSliderMouseEvent={this.handleSliderMouseEvent} /> */}
 
 export default function Sliders({ 
     indicator, 
@@ -38,10 +26,6 @@ export default function Sliders({
 }) {
     const [ showTooltipThreshold, setShowTooltipThreshold ] = useState(false);
     const [ showTooltipDateThreshold, setShowTooltipDateThreshold ] = useState(false);
-    // const [ dateIdx, setDateIdx ] = useState("150");
-    // const [ val, setVal ] = useState(indicatorThreshold);
-    let thresholdRef = useRef(indicatorThreshold);
-    let dateRef = useRef(dateThreshold);
 
     function handleStatChange(i) {
         onStatSliderChange(i);
@@ -53,19 +37,19 @@ export default function Sliders({
     }
 
     function handleStatMouseEvent(e) {
-        onSliderMouseEvent(e.type, 'indicator', 'graph')
+        onSliderMouseEvent(e.type, 'indicator', 'graph');
     }
 
     function handleDateMouseEvent(e) {
-        onSliderMouseEvent(e.type, 'date', 'graph')
+        onSliderMouseEvent(e.type, 'date', 'graph');
     }
 
     function handleTooltipClickThresh() {
-        setShowTooltipThreshold(!showTooltipThreshold)
+        setShowTooltipThreshold(!showTooltipThreshold);
     }
 
     function handleTooltipClickDate() {
-        setShowTooltipDateThreshold(!showTooltipDateThreshold)
+        setShowTooltipDateThreshold(!showTooltipDateThreshold);
     }
 
     const isDisabled = showConfBounds ? "disabled" : "";
@@ -84,8 +68,8 @@ export default function Sliders({
                         &nbsp;<InfoCircleTwoTone />
                         {showTooltipThreshold &&
                         <span className="tooltip-text">
-                        This is the Threshold value used for the display in “Threshold Exceedance” mode. 
-                        You will not be able to modify this slider when in “Confidence Bounds” mode.
+                        This is the Threshold value used for the display in "Threshold Exceedance" mode. 
+                        You will not be able to modify this slider when in "Confidence Bounds" mode.
                         </span> }
                     </div>
                 </TooltipHandler>
@@ -105,7 +89,7 @@ export default function Sliders({
                 style={styles.Selector}
                 // ref={ref => statInput = ref}
                 disabled={isDisabled}
-                onChange={() => {handleStatChange(thresholdRef)}}
+                onChange={() => {handleStatChange(indicatorThreshold)}}
                 onMouseDown={handleStatMouseEvent}
                 onMouseUp={handleStatMouseEvent}>
             </input> 
@@ -126,8 +110,8 @@ export default function Sliders({
                         &nbsp;<InfoCircleTwoTone />
                         {showTooltipDateThreshold &&
                         <span className="tooltip-text">
-                        This is the Date Threshold used for the display in “Threshold Exceedance” mod
-                        You will not be able to modify this slider when in “Confidence Bounds” mode.
+                        This is the Date Threshold used for the display in "Threshold Exceedance" mod
+                        You will not be able to modify this slider when in "Confidence Bounds" mode.
                         </span> }
                     </div>
                 </TooltipHandler>
@@ -145,7 +129,7 @@ export default function Sliders({
                 style={styles.Selector}
                 // ref={ref => dateInput = ref}
                 disabled={isDisabled}
-                onChange={() => {handleDateChange(dateRef)}}
+                onChange={() => {handleDateChange(dateThreshold)}}
                 onMouseDown={handleDateMouseEvent}
                 onMouseUp={handleDateMouseEvent}>
             </input>
