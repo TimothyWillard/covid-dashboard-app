@@ -1,7 +1,7 @@
 import React from 'react';
 import { Modal } from 'antd';
 
-function ViewModal(prop) {
+export default function ViewModal(prop) {
   return (
     <Modal
       title={prop.modalTitle}
@@ -15,5 +15,3 @@ function ViewModal(prop) {
     </Modal>
   )
 }
-
-export default ViewModal
