@@ -4,8 +4,8 @@ import { ReactComponent as AltLogo } from '../assets/logo-idd-jhsph.svg';
 import MenuItem from './MenuItem';
 import { ReactComponent as Hamburger } from '../assets/hamburger.svg';
 import { styles } from '../utils/constants';
+import { formatNavBar } from '../utils/utils';
 
-const format = (s) => s.replace(' responsive', '');
 class NavBar extends Component {
   constructor(props) {
     super(props);
@@ -19,9 +19,9 @@ class NavBar extends Component {
     // close nav bar on mobile
     const items = document.getElementsByClassName("menu-items");
     const nav = document.getElementById("nav-menu");
-    nav.className = format(nav.className)
+    nav.className = formatNavBar(nav.className)
     for (let item of items) {
-      item.className = format(item.className)
+      item.className = formatNavBar(item.className)
     }
 
     this.setState({ active: index })
@@ -37,15 +37,15 @@ class NavBar extends Component {
       nav.className += " responsive";
       logo.className += " responsive";
     } else {
-      nav.className = format(nav.className)
-      logo.className = format(logo.className)
+      nav.className = formatNavBar(nav.className)
+      logo.className = formatNavBar(logo.className)
     }
 
     for (let item of items) {
       if (!item.className.includes('responsive')) {
         item.className += " responsive";
       } else {
-        item.className = format(item.className)
+        item.className = formatNavBar(item.className)
       }
     }
   }

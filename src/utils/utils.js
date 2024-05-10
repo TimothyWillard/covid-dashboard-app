@@ -145,4 +145,8 @@ export function formatTitle(s) {
   return s.replace('_',' ');
 }
 
+export function formatNavBar(s) {
+  s.replace(' responsive', '')
+}
+
 export const getReadableDate = timeFormat('%b %d, %Y');
