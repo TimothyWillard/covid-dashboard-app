@@ -24,7 +24,7 @@ class MainMap extends Component {
             SCENARIOS: [],
             scenario: '',         
             dateSliderActiveMap: false,
-            countyBoundaries: {},
+            stateBoundaries: {},
             indicatorsForCounty: {},
             currentDateIndex: 0,
             modalVisible: false,
