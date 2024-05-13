@@ -26,6 +26,15 @@ export default function MainContainer(props) {
     const [ mapContainerW, setMapContainerW ] = useState(initialMapContainerW);
     const [ mapContainerH, setMapContainerH ] = useState(initialMapContainerH);
 
+    function containerResizeHandler() {
+        const [ mapWidth, mapHeight ] = getMapContainerDimensions();
+        const [ graphWidth, graphHeight ] = getGraphContainerDimensions();
+        setGraphW(graphWidth);
+        setGraphH(graphHeight);
+        setMapContainerW(mapWidth);
+        setMapContainerH(mapHeight);
+    }
+
     useEffect(() => {
         const fetchData = async() => {
             const dataset = await fetchDataset(geoid);
@@ -38,40 +47,20 @@ export default function MainContainer(props) {
         }
         fetchData()
             .then(() => {
-                if (!dataLoaded) {
-                    setDataLoaded(true)
-                }
+                setDataLoaded(true)
             })
             .catch((e) => {
                 setFetchErrors(e.message);
                 console.error(e.message);
             })
-        window.addEventListener('resize', (e) => {
-            const [ width, height ] = getGraphContainerDimensions();
-            setGraphW(width);
-            setGraphH(height);
-        });
-        window.addEventListener('resize', (e) => {
-            const [ width, height ] = getMapContainerDimensions();
-            setMapContainerW(width);
-            setMapContainerH(height);
-        });
+        window.addEventListener('resize', containerResizeHandler);
         return () => {
             setFetchErrors('');
             setDataLoaded(false);
             setDataset({});
             setActuals({});
             setIndicators([]);
-            window.removeEventListener('resize', (e) => {
-                const [ width, height ] = getGraphContainerDimensions();
-                setGraphW(width);
-                setGraphH(height);
-            });
-            window.removeEventListener('resize', (e) => {
-                const [ width, height ] = getMapContainerDimensions();
-                setMapContainerW(width);
-                setMapContainerH(height);
-            });
+            window.removeEventListener('resize', containerResizeHandler);
         };
     }, [geoid]);
 
