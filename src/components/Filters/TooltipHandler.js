@@ -1,56 +1,37 @@
-import React, { Component } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import PropTypes from 'prop-types';
 
-export default class OutsideAlerter extends Component {
-    // Component facilitates click handler of tooltip and ensures it closes
-    // when user clicks anywhere on the page after opening tooltip
+const TooltipHandler = ({ children, onClick, showTooltip }) => {
+  const wrapperRef = useRef(null);
 
-    constructor(props) {
-        super(props);
-        this.setWrapperRef = this.setWrapperRef.bind(this);
-        this.handleClick = this.handleClick.bind(this);
-        this.onClick = this.props.onClick.bind(this);
+  const handleClick = useCallback((event) => {
+    if (wrapperRef.current && wrapperRef.current.contains(event.target)) {
+      // Click on tooltip
+      onClick();
+    } else if (wrapperRef.current && !wrapperRef.current.contains(event.target) && showTooltip) {
+      // Click outside tooltip will close menu
+      onClick();
     }
+  }, [onClick, showTooltip]);  // Dependencies that determine when handleClick is re-created
 
-    componentDidMount() {
-        document.addEventListener('mousedown', this.handleClick);
-    }
+  useEffect(() => {
+    document.addEventListener('mousedown', handleClick);
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+    };
+  }, [handleClick]); // handleClick is now stable and changes only if onClick or showTooltip changes
 
-    componentWillUnmount() {
-        document.removeEventListener('mousedown', this.handleClick);
-    }
-
-    setWrapperRef(node) {
-        this.wrapperRef = node;
-    }
-
-    handleClick(event) {
-        const { showTooltip } = this.props;
-
-        if (this.wrapperRef && 
-            this.wrapperRef.contains(event.target)) {
-            // click on tooltip
-            this.onClick();
-        } else if (
-            this.wrapperRef && 
-            !this.wrapperRef.contains(event.target) &&
-            showTooltip === true) {
-            // click outside tooltip will close menu
-            this.onClick();
-        } else {
-            return;
-        }
-    }
-
-    render() {
-        return (
-        <div style={{ display: 'inline' }} ref={this.setWrapperRef}>
-            {this.props.children}
-        </div> 
-        );
-    }
-}
-
-OutsideAlerter.propTypes = {
-  children: PropTypes.element.isRequired,
+  return (
+    <div style={{ display: 'inline' }} ref={wrapperRef}>
+      {children}
+    </div>
+  );
 };
+
+TooltipHandler.propTypes = {
+  children: PropTypes.element.isRequired,
+  onClick: PropTypes.func.isRequired,
+  showTooltip: PropTypes.bool.isRequired
+};
+
+export default TooltipHandler;
