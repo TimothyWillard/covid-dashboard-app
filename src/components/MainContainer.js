@@ -37,11 +37,15 @@ export default function MainContainer(props) {
             setIndicators(indicators);
         }
         fetchData()
+            .then(() => {
+                if (!dataLoaded) {
+                    setDataLoaded(true)
+                }
+            })
             .catch((e) => {
                 setFetchErrors(e.message);
                 console.error(e.message);
             })
-        setDataLoaded(true);
         window.addEventListener('resize', (e) => {
             const [ width, height ] = getGraphContainerDimensions();
             setGraphW(width);
