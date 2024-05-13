@@ -1,6 +1,8 @@
-import React, { Component } from 'react';
+// import React, { Component, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Layout } from 'antd';
 import { defaultGeoid, margin, dimMultipliers } from '../utils/constants';
+import { getGraphContainerDimensions, getMapContainerDimensions } from '../utils/dimensions';
 import { fetchDataset, fetchActuals, fetchConfig } from '../utils/fetch';
 import Search from './Search/Search.tsx'
 import MainGraph from './Graph/MainGraph';
@@ -9,136 +11,121 @@ import MainMap from './Map/MainMap';
 import Methodology from './Methodology';
 import About from './About';
 
+export default function MainContainer(props) {
+    const [ initialGraphW, initialGraphH ] = getGraphContainerDimensions();
+    const [ initialMapContainerW, initialMapContainerH ] = getGraphContainerDimensions();
 
-class MainContainer extends Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            dataset: {},
-            dataLoaded: false, 
-            geoid: defaultGeoid, 
-            indicators: [],
-            actuals: {},
-            graphW: 0,
-            graphH: 0,
-            mapContainerW: 0,
-            mapContainerH: 0,
-            fetchErrors: ''
+    const [ dataset, setDataset ] = useState({});
+    const [ geoid, setGeoid ] = useState(defaultGeoid);
+    const [ actuals, setActuals ] = useState({});
+    const [ indicators, setIndicators ] = useState([]);
+    const [ fetchErrors, setFetchErrors ] = useState(''); 
+    const [ dataLoaded, setDataLoaded ] = useState(false);
+    const [ graphW, setGraphW ] = useState(initialGraphW);
+    const [ graphH, setGraphH ] = useState(initialGraphH);
+    const [ mapContainerW, setMapContainerW ] = useState(initialMapContainerW);
+    const [ mapContainerH, setMapContainerH ] = useState(initialMapContainerH);
+
+    useEffect(() => {
+        const fetchData = async() => {
+            const dataset = await fetchDataset(geoid);
+            const actuals = await fetchActuals(geoid);
+            const outcomes = await fetchConfig('outcomes');
+            const indicators = Object.keys(outcomes).map((obj) => outcomes[obj]);
+            setDataset(dataset);
+            setActuals(actuals);
+            setIndicators(indicators);
+        }
+        fetchData()
+            .catch((e) => {
+                setFetchErrors(e.message);
+                console.error(e.message);
+            })
+        setDataLoaded(true);
+        window.addEventListener('resize', (e) => {
+            const [ width, height ] = getGraphContainerDimensions();
+            setGraphW(width);
+            setGraphH(height);
+        });
+        window.addEventListener('resize', (e) => {
+            const [ width, height ] = getMapContainerDimensions();
+            setMapContainerW(width);
+            setMapContainerH(height);
+        });
+        return () => {
+            setFetchErrors('');
+            setDataLoaded(false);
+            setDataset({});
+            setActuals({});
+            setIndicators([]);
+            window.removeEventListener('resize', (e) => {
+                const [ width, height ] = getGraphContainerDimensions();
+                setGraphW(width);
+                setGraphH(height);
+            });
+            window.removeEventListener('resize', (e) => {
+                const [ width, height ] = getMapContainerDimensions();
+                setMapContainerW(width);
+                setMapContainerH(height);
+            });
         };
+    }, [geoid]);
+
+    function handleCountySelect(geoid) {
+        setGeoid(geoid);
     };
 
-    async componentDidMount() {
-        window.addEventListener('resize', this.updateGraphDimensions);
-        window.addEventListener('resize', this.updateMapContainerDimensions);
-
-        this.updateGraphDimensions();
-        this.updateMapContainerDimensions();
-
-        const { geoid } = this.state;
-        try {
-            const dataset = await fetchDataset(geoid);
-            const actuals = await fetchActuals(geoid);
-            const outcomes = await fetchConfig('outcomes');
-            const indicators = Object.keys(outcomes).map((obj) => outcomes[obj]);
-
-            this.setState({dataset, actuals, indicators});
-        } catch (e) {
-            this.setState({fetchErrors: e.message});
-        } finally {
-            this.setState({dataLoaded: true});
-        }
-    };
-   
-    componentWillUnmount() {
-        window.removeEventListener('resize', this.updateGraphDimensions)
-        window.removeEventListener('resize', this.updateMapContainerDimensions)
-    }
-
-    updateGraphDimensions = () => {
-        const ratioH = dimMultipliers.graphDesktopH;
-        const ratioW = window.innerWidth > 800 ?
-            dimMultipliers.graphDesktopW :
-            dimMultipliers.graphMobileW; // account for mobile
-
-        const graphH = window.innerHeight * ratioH;
-        const graphW = (window.innerWidth * ratioW) - margin.yAxis;
-
-        this.setState({ graphW, graphH, animateTransition: false });
-    }
-
-    updateMapContainerDimensions = () => {
-        const ratioH = dimMultipliers.mapDesktopH;
-        const ratioW = window.innerWidth > 800 ?
-            dimMultipliers.graphDesktopW :
-            dimMultipliers.mapMobileW; // account for mobile 
-
-        const mapContainerH = window.innerHeight * ratioH;
-        const mapContainerW = ((window.innerWidth * ratioW) - margin.yAxis) -
-            (6 * (margin.left));
-
-        this.setState({ mapContainerW, mapContainerH });
-    }
-
-    handleCountySelect = async (geoid) => {
-        try {
-            const dataset = await fetchDataset(geoid);
-            const actuals = await fetchActuals(geoid);
-            const outcomes = await fetchConfig('outcomes');
-            const indicators = Object.keys(outcomes).map((obj) => outcomes[obj]);
-
-            this.setState({ dataset, geoid, actuals, indicators });
-        } catch (e) {
-            this.setState({fetchErrors: e.message});
-        }
+    function handleUpload(dataset, geoid) {
+        // TODO: I think file upload handling is going to be a bit 
+        // broken at the moment because the setGeoid call here will 
+        // invoke the useEffect above the resets/reloads the dataset.
+        setDataset(dataset); 
+        setGeoid(geoid);
     };
 
-    handleUpload = (dataset, geoid) => {
-        this.setState({dataset, geoid})
-    };
+    const mainChartWidth = graphW - margin.left - margin.right;
+    const mainChartHeight = graphH * dimMultipliers.chartDesktopH
+    const mainMapWidth = mapContainerW - margin.left - margin.right;
+    const mainMapHeight = mapContainerH;
 
-    render() {
-        return (
-            <Layout>
-                <Search
-                    geoid={this.state.geoid}
-                    onFileUpload={this.handleUpload}
-                    onCountySelect={this.handleCountySelect}>
-                </Search>
-
-                {this.state.dataLoaded &&
+    return (
+        <Layout>
+            <Search
+                geoid={geoid}
+                onFileUpload={handleUpload}
+                onCountySelect={handleCountySelect}>
+            </Search>
+            { dataLoaded &&
                 <MainGraph
-                    geoid={this.state.geoid}
-                    dataset={this.state.dataset}
-                    indicators={this.state.indicators}
-                    actuals={this.state.actuals}
-                    width={this.state.graphW}
-                    height={this.state.graphH}
-                    fetchErrors={this.state.fetchErrors}
-                />}
-
-                {this.state.dataLoaded &&
+                    geoid={geoid}
+                    dataset={dataset}
+                    indicators={indicators}
+                    actuals={actuals}
+                    width={graphW}
+                    height={graphH}
+                    fetchErrors={fetchErrors}
+                />
+            }
+            { dataLoaded &&
                 <MainChart
-                    geoid={this.state.geoid}
-                    dataset={this.state.dataset}
-                    indicators={this.state.indicators}
-                    width={this.state.graphW - margin.left - margin.right}
-                    height={this.state.graphH * dimMultipliers.chartDesktopH}
-                />}
-
-                {this.state.dataLoaded &&
+                    geoid={geoid}
+                    dataset={dataset}
+                    indicators={indicators}
+                    width={mainChartWidth}
+                    height={mainChartHeight}
+                />
+            }
+            { dataLoaded &&
                 <MainMap
-                    geoid={this.state.geoid}
-                    dataset={this.state.dataset}
-                    indicators={this.state.indicators}
-                    width={this.state.mapContainerW - margin.left - margin.right}
-                    height={this.state.mapContainerH}
-                />}
-
-                <Methodology/>
-                <About/>
-            </Layout>
-        )
-    }
+                    geoid={geoid}
+                    dataset={dataset}
+                    indicators={indicators}
+                    width={mainMapWidth}
+                    height={mainMapHeight}
+                />
+            }
+            <Methodology/>
+            <About/>
+        </Layout>
+    )
 }
-
-export default MainContainer;
