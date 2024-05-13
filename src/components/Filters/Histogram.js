@@ -6,17 +6,23 @@ import { colors } from '../../utils/colors.js';
 export default function Histogram({ allSims, selectedSims, sortedSims, selected, r0min, r0max, height, step }) {
   const [width, setWidth] = useState(0);
 
+  function resizeHandler(e) {
+    const r0Slider = document.querySelector('.r0-slider');
+    if (r0Slider === null) {
+      setWidth(0);
+    }
+    const width = r0Slider.clientWidth;
+    if (width === null) {
+      setWidth(0);
+    }
+    setWidth(width);
+  }
+
   useEffect(() => {
     setWidth(document.querySelector('.r0-slider').clientWidth);
-    window.addEventListener('resize', (e) => {
-      const width = document.querySelector('.r0-slider').clientWidth;
-      setWidth(width);
-    });
+    window.addEventListener('resize', resizeHandler);
     return () => {
-      window.removeEventListener('resize', (e) => {
-        const width = document.querySelector('.r0-slider').clientWidth;
-        setWidth(width);
-      });
+      window.removeEventListener('resize', resizeHandler);
     };
   }, []);
 
