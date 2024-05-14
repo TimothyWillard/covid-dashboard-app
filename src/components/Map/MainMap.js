@@ -1,83 +1,46 @@
-import React, { Component, Fragment } from 'react';
+import React, { Fragment, useEffect, useRef, useState } from 'react';
 import { Layout, Row, Col, Spin, Alert } from 'antd';
 import { PlusCircleTwoTone } from '@ant-design/icons';
 import MapContainer from './MapContainer';
 import Scenarios from '../Filters/Scenarios.tsx';
 import DateSlider from './DateSlider';
 import ViewModal from '../ViewModal.js';
+import PropTypes from 'prop-types';
 
 import { styles } from '../../utils/constants';
 import { buildScenarios } from '../../utils/utils';
 import { fetchConfig } from '../../utils/fetch';
 import { utcParse, timeFormat } from 'd3-time-format'
 
+const { Content } = Layout;
 const parseDate = utcParse('%Y-%m-%d')
 const formatDate = timeFormat('%Y-%m-%d')
 
-class MainMap extends Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            dataLoaded: false,
-            datasetMap: {},
-            dates: [],
-            SCENARIOS: [],
-            scenario: '',         
-            dateSliderActiveMap: false,
-            stateBoundaries: {},
-            indicatorsForCounty: {},
-            indicatorsForMap: {},
-            currentDateIndex: 0,
-            modalVisible: false,
-            firstModalVisit: true,
-            fetchErrors: ''
-        };
-        this.scrollElemMap = React.createRef();
-    };
+const MainMap = ({ geoid, dataset, indicators, width, height }) => {
+    const [ dataLoaded, setDataLoaded ] = useState(false);
+    const [ datasetMap, setDatasetMap ] = useState({});
+    const [ dates, setDates ] = useState([]);
+    const [ scenarios, setScenarios ] = useState([]);
+    const [ scenario, setScenario ] = useState('');
+    const [ dateSliderActiveMap, setDateSliderActiveMap ] = useState(false);
+    const [ indicatorsForMap, setIndicatorsForMap ] = useState({});
+    const [ indicatorsForCounty, setIndicatorsForCounty ] = useState({});
+    const [ stateBoundaries, setStateBoundaries ] = useState({});
+    const [ countyBoundaries, setCountyBoundaries ] = useState({});
+    const [ fetchErrors, setFetchErrors ] = useState('');
+    const [ currentDateIndex, setCurrentDateIndex ] = useState(0);
+    const [ modalVisible, setModalVisible ] = useState(false);
+    // const [ firstModalVisit, setFirstModalVisit ] = useState(true);
+    const firstModalVisitRef = useRef(true);
 
-    async componentDidMount() {
-        const { dataset } = this.props;
-        try {
-            const indicatorsForMap = await fetchConfig('statsForMap');
-            const stateBoundaries = await fetchConfig('countyBoundaries');
-
-            this.setState({
-                indicatorsForMap,
-                stateBoundaries
-            });
-            this.initializeMap(dataset)
-        } catch (e) {
-            this.setState({fetchErrors: e.message})
-        } 
-        finally {
-            this.setState({dataLoaded: true});
-        }
-        window.addEventListener("scroll", this.handleScroll, true);
-    };
-
-    componentWillUnmount() {
-        window.removeEventListener("scroll", this.handleScroll, true);
-    }
-
-    componentDidUpdate(prevProp) {
-        const { dataset } = this.props;
-        if (dataset !== prevProp.dataset) {
-            this.initializeMap(dataset)        
-        }
-    };
-
-    initializeMap(dataset) {
-        const { geoid } = this.props;
-        const { indicatorsForMap, stateBoundaries } = this.state;
-        const state = geoid.slice(0, 2);
-
+    function initializeMap() {
+        const stateFips = geoid.slice(0, 2);
         if (Object.keys(dataset).length > 0 &&
             Object.keys(indicatorsForMap).length > 0 &&
-            Object.keys(stateBoundaries).length > 0 
-        ) {
+            Object.keys(stateBoundaries).length > 0) {
             // instantiate scenarios and dates
-            const SCENARIOS = buildScenarios(dataset);
-            const scenario = SCENARIOS[0].key;       
+            const scenarios = buildScenarios(dataset);
+            const scenario = scenarios[0].key;       
             const dates = dataset[scenario].dates.map( d => parseDate(d));
           
             // '2020-07-19-21-44-47-inference'
@@ -87,16 +50,14 @@ class MainMap extends Component {
             const currentDateIndex = dates
                 .findIndex(date => formatDate(date) === formatDate(dateThreshold));
 
-            this.setState({
-                datasetMap: dataset, 
-                dates,
-                SCENARIOS,
-                scenario,
-                indicatorsForCounty: indicatorsForMap[state],
-                countyBoundaries: stateBoundaries[state],
-                currentDateIndex,
-                dataLoaded: true
-            });
+            setDatasetMap(dataset);
+            setDates(dates);
+            setScenarios(scenarios);
+            setScenario(scenario);
+            setIndicatorsForCounty(indicatorsForMap[stateFips]);
+            setCountyBoundaries(stateBoundaries[stateFips]);
+            setCurrentDateIndex(currentDateIndex);
+            setDataLoaded(true);
         } else {
             if (Object.keys(dataset).length === 0) console.log('Map Error: Dataset is empty');
             if (Object.keys(indicatorsForMap).length === 0) console.log('Map Error: indicatorsForMap is empty');
@@ -104,138 +65,172 @@ class MainMap extends Component {
         }
     }
 
-    handleScenarioClick = (item) => {this.setState({scenario: item})};
+    function showModal() {
+        setModalVisible(true);
+        firstModalVisitRef.current = false;
+    }
 
-    handleMapSliderChange = (index) => {this.setState({currentDateIndex: +index})};
+    function mainMapScrollHandler() {
+        const mainMapDiv = document.getElementById('main-map-div');
+        if (mainMapDiv && firstModalVisitRef.current && 
+            (document.body.scrollTop > mainMapDiv.offsetTop - 60 && 
+                document.body.scrollTop < mainMapDiv.offsetTop)) {
+            showModal();
+        } 
+    }
 
-    handleSliderMouseEvent = (type) => {
+    function handleScenarioClick(item) {
+        setScenario(item);
+    }
+
+    function handleMapSliderChange(index) {
+        setCurrentDateIndex(+index);
+    }
+
+    function handleSliderMouseEvent(type) {
         if (type === 'mousedown') {
-            this.setState({ dateSliderActiveMap: true })
+            setDateSliderActiveMap(true);
         } else {
-            this.setState({ dateSliderActiveMap: false })
+            setDateSliderActiveMap(false);
         }
     }
 
-    handleModalCancel = (e) => {
-        this.setState({
-            modalVisible: false,
-            firstModalVisit: false,
-        });
+    function handleModalCancel() {
+        setModalVisible(false);
     }
 
-    showModal = () => {
-        this.setState({
-            modalVisible: true,
-        });
-    }
-
-    handleScroll = (e) => {
-        if (this.scrollElemMap.current && this.state.firstModalVisit && 
-            (document.body.scrollTop > this.scrollElemMap.current.offsetTop - 60 && 
-                document.body.scrollTop < this.scrollElemMap.current.offsetTop)) {
-            this.setState({
-                modalVisible: true,
+    /* eslint-disable react-hooks/exhaustive-deps */
+    useEffect(() => {
+        const fetchData = async() => {
+            const indForMap = await fetchConfig('statsForMap');
+            const stateBound = await fetchConfig('countyBoundaries');
+            setIndicatorsForMap(indForMap);
+            setStateBoundaries(stateBound);
+        }
+        fetchData()
+            .then(() => {
+                setDataLoaded(true);
+            })
+            .catch((e) => {
+                setFetchErrors(e.message);
+                console.error(e.message);
             });
-        }
-    }
+        window.addEventListener('scroll', mainMapScrollHandler, true);
+        return () => {
+            setFetchErrors('');
+            setDataLoaded(false);
+            setIndicatorsForMap({});
+            setStateBoundaries({});
+            window.removeEventListener('scroll', mainMapScrollHandler, true);
+        };
+    }, []);
+    
+    useEffect(() => {
+        initializeMap();
+        return () => {};
+    }, [ dataLoaded, geoid ]);
+    /* eslint-enable react-hooks/exhaustive-deps */
 
-    render() {
-        const { Content } = Layout;
-        const { dates, currentDateIndex, SCENARIOS } = this.state;
-        const { dataLoaded, indicatorsForCounty } = this.state;
-        const indicatorsLen = Object.keys(indicatorsForCounty).length;
+    const indicatorsLen = Object.keys(indicatorsForCounty) ? Object.keys(indicatorsForCounty).length : 0;
 
-        return (
-            <div ref={this.scrollElemMap}>
-                <Content id="geographic-map" style={styles.ContainerGray}>
-                    {/* Loaded Map, indicatorsForCounty has been fetched */}
-                    {dataLoaded && indicatorsLen > 0 &&
-                    <Row gutter={styles.gutter}>
-                        <Col className="gutter-row container" style={styles.MapContainer}>
-                        <div className="graph-title-row">
-                                <div className="section-title">Map View</div>
-                            </div>
-                            <ViewModal 
-                                modalTitle="Interpreting the map view"
-                                modalVisible={this.state.modalVisible}
-                                onCancel={this.handleModalCancel}
-                                modalContainer="#geographic-map"
-                                modalText={
-                                    <div>
-                                        <p>This map displays the projected mean point estimate mean value 
-                                        (e.g., confirmed cases, hospitalizations, deaths) 
-                                        per 10,000 population by county on a specific date.</p>
-                                        <p>Use the control panel on the right to select a scenario and date for display in the map. 
-                                        Hover over individual counties with your cursor for additional information. 
-                                        Use the right and left arrow keys to increase or decrease by day.</p>
-                                        <div className="mobile-alert">
-                                            &#9888; Please use a desktop to access the full feature set.
-                                        </div>
-                                    </div>
-                                }
-                            />
-                            <div className="map-container">
-                                <MapContainer
-                                    geoid={this.props.geoid}
-                                    dataset={this.state.datasetMap}
-                                    indicators={this.props.indicators}
-                                    width={this.props.width}
-                                    height={this.props.height}
-                                    scenario={this.state.scenario}
-                                    firstDate={dates[0]}
-                                    selectedDate={dates[currentDateIndex]}
-                                    countyBoundaries={this.state.countyBoundaries}
-                                    indicatorsForCounty={indicatorsForCounty}
-                                    dateSliderActive={this.state.dateSliderActive}
-                                />
-                            </div>
-                        </Col>
-
-                        <Col className="gutter-row filters"> 
-                            {dataLoaded &&
-                            <Fragment>
-                                <div className="instructions-wrapper" onClick={this.showModal}>
-                                    <div className="param-header instructions-label">INSTRUCTIONS</div>
-                                    <div className="instructions-icon">
-                                        <PlusCircleTwoTone />
-                                    </div>
-                                </div>
-                                <Scenarios
-                                    view="map"
-                                    SCENARIOS={SCENARIOS}
-                                    scenario={this.state.scenario}
-                                    onScenarioClickMap={this.handleScenarioClick}
-                                />
-                                <DateSlider
-                                    dates={dates}
-                                    currentDateIndex={this.state.currentDateIndex.toString()}
-                                    onMapSliderChange={this.handleMapSliderChange}
-                                    onSliderMouseEvent={this.handleSliderMouseEvent}
-                                />
-                            </Fragment>
-                            }
-                        </Col>
-                    </Row>}
-                    {/* Loading finished but indicatorsForCounty is undefined */}
-                    {indicatorsLen === 0 && 
-                    <div className="error-container">
-                        <Spin spinning={false}>
-                            <Alert
-                            message="Data Unavailable"
-                            description={
+    return (
+        <div id="main-map-div">
+            <Content id="geographic-map" style={styles.ContainerGray}>
+                {/* Loaded Map, indicatorsForCounty has been fetched */}
+                {dataLoaded && indicatorsLen > 0 &&
+                <Row gutter={styles.gutter}>
+                    <Col className="gutter-row container" style={styles.MapContainer}>
+                    <div className="graph-title-row">
+                            <div className="section-title">Map View</div>
+                        </div>
+                        <ViewModal 
+                            modalTitle="Interpreting the map view"
+                            modalVisible={modalVisible}
+                            onCancel={handleModalCancel}
+                            modalContainer="#geographic-map"
+                            modalText={
                                 <div>
-                                    Geographic data is unavailable for county {this.props.geoid}. <br />
-                                    {this.state.fetchErrors}
+                                    <p>This map displays the projected mean point estimate mean value 
+                                    (e.g., confirmed cases, hospitalizations, deaths) 
+                                    per 10,000 population by county on a specific date.</p>
+                                    <p>Use the control panel on the right to select a scenario and date for display in the map. 
+                                    Hover over individual counties with your cursor for additional information. 
+                                    Use the right and left arrow keys to increase or decrease by day.</p>
+                                    <div className="mobile-alert">
+                                        &#9888; Please use a desktop to access the full feature set.
+                                    </div>
                                 </div>
                             }
-                            type="info"
+                        />
+                        <div className="map-container">
+                            <MapContainer
+                                geoid={geoid}
+                                dataset={datasetMap}
+                                indicators={indicators}
+                                width={width}
+                                height={height}
+                                scenario={scenario}
+                                firstDate={dates[0]}
+                                selectedDate={dates[currentDateIndex]}
+                                countyBoundaries={countyBoundaries}
+                                indicatorsForCounty={indicatorsForCounty}
+                                dateSliderActive={dateSliderActiveMap}
                             />
-                        </Spin>
-                    </div>}
-                </Content>
-            </div>
-        )
-    }
-}
+                        </div>
+                    </Col>
 
-export default MainMap
+                    <Col className="gutter-row filters"> 
+                        {dataLoaded &&
+                        <Fragment>
+                            <div className="instructions-wrapper" onClick={showModal}>
+                                <div className="param-header instructions-label">INSTRUCTIONS</div>
+                                <div className="instructions-icon">
+                                    <PlusCircleTwoTone />
+                                </div>
+                            </div>
+                            <Scenarios
+                                view="map"
+                                SCENARIOS={scenarios}
+                                scenario={scenario}
+                                onScenarioClickMap={handleScenarioClick}
+                            />
+                            <DateSlider
+                                dates={dates}
+                                currentDateIndex={currentDateIndex.toString()}
+                                onMapSliderChange={handleMapSliderChange}
+                                onSliderMouseEvent={handleSliderMouseEvent}
+                            />
+                        </Fragment>
+                        }
+                    </Col>
+                </Row>}
+                {/* Loading finished but indicatorsForCounty is undefined */}
+                {indicatorsLen === 0 && 
+                <div className="error-container">
+                    <Spin spinning={false}>
+                        <Alert
+                        message="Data Unavailable"
+                        description={
+                            <div>
+                                Geographic data is unavailable for county {geoid}. <br />
+                                {fetchErrors}
+                            </div>
+                        }
+                        type="info"
+                        />
+                    </Spin>
+                </div>}
+            </Content>
+        </div>
+    );
+};
+
+MainMap.propTypes = {
+    geoid: PropTypes.string.isRequired,
+    dataset: PropTypes.object.isRequired, 
+    indicators: PropTypes.array.isRequired, 
+    width: PropTypes.number.isRequired, 
+    height: PropTypes.number.isRequired
+};
+
+export default MainMap;
