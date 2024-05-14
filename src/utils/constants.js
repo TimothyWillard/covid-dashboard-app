@@ -40,7 +40,16 @@ export const dimMultipliers = {
     mapMobileW: 1.8,
     // multiplier of graphW so Brush is aligned with graph (accounts for width of y-axis label in flex container)
     brushOffset: 0.03,
-}
+};
+
+export const dim = {
+    // Map legend width
+    legendW: 60,
+    // Gradient margin
+    gradientMargin: 20,
+    // Gradient width
+    gradientW: 15,
+};
 
 // ant design components are inline styled (and resist styling via css classes)
 export const styles = {

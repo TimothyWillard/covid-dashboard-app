@@ -11,10 +11,7 @@ import Axis from '../Graph/Axis';
 import { addCommas } from '../../utils/utils';
 import colors from '../../utils/colors';
 import { STATEPLANES } from '../../utils/projectionSettings';
-
-const legendW = 60;
-const gradientMargin = 20;
-const gradientW = legendW/4;
+import { dim } from '../../utils/constants'
 
 class Map extends Component {
     constructor(props) {
@@ -36,7 +33,7 @@ class Map extends Component {
     }
 
     componentDidMount() {
-        const gradientH = (this.props.width - gradientMargin) / 2;
+        const gradientH = (this.props.width - dim.gradientMargin) / 2;
         this.setState({ gradientH }, () => this.calculateScales());
         if (this.mapRef.current) {
             const mapNode = select(this.mapRef.current)
@@ -49,7 +46,7 @@ class Map extends Component {
         if (prevProps.countyBoundaries !== this.props.countyBoundaries ||
             prevProps.indicatorsForCounty !== this.props.indicatorsForCounty ||
             prevProps.scenario !== this.props.scenario) {
-                const gradientH = (this.props.width - gradientMargin) / 2;
+                const gradientH = (this.props.width - dim.gradientMargin) / 2;
                 this.setState({ gradientH }, () => this.calculateScales());
             if (this.mapRef.current) {
                 const mapNode = select(this.mapRef.current)
@@ -116,23 +113,23 @@ class Map extends Component {
             projection = geoMercator()
                 // .parallels(parallels)
                 // .rotate(rotation)
-                .fitSize([width - legendW, height], countyBoundaries)
+                .fitSize([width - dim.legendW, height], countyBoundaries)
         } else if (statePlane.proj === 'tmerc') {
             projection = geoTransverseMercator()
                 // .parallels(parallels)
                 .rotate(rotation)
-                .fitSize([width - legendW, height], countyBoundaries)
+                .fitSize([width - dim.legendW, height], countyBoundaries)
         } else if (statePlane.proj === 'lcc'){
             projection = geoConicConformal()
                 .parallels(parallels)
                 .rotate(rotation)
-                .fitSize([width - legendW, height], countyBoundaries)
+                .fitSize([width - dim.legendW, height], countyBoundaries)
         } else {
             // albers
             projection = geoAlbers()
                 .parallels(parallels)
                 .rotate(rotation)
-                .fitSize([width - legendW, height], countyBoundaries)
+                .fitSize([width - dim.legendW, height], countyBoundaries)
         }
 
         const pathGenerator = geoPath().projection(projection)
@@ -248,7 +245,7 @@ class Map extends Component {
                     <div><button className="zoom" id="zoom_in" onClick={this.handleZoomIn}>+</button></div>
                     <div><button className="zoom" id="zoom_out" onClick={this.handleZoomOut}>-</button></div>
                 </div>
-                <svg width={legendW} height={this.props.height}>
+                <svg width={dim.legendW} height={this.props.height}>
                     <defs>
                         <linearGradient 
                             id={`map-legend-gradient-${this.props.indicator.key}`} 
@@ -263,23 +260,23 @@ class Map extends Component {
                         </linearGradient>
                     </defs>
                     <rect
-                        width={gradientW}
+                        width={dim.gradientW}
                         height={this.state.gradientH}
-                        transform={`translate(0, ${gradientMargin})`}
+                        transform={`translate(0, ${dim.gradientMargin})`}
                         style={{ fill: `url(#map-legend-gradient-${this.props.indicator.key}` }}
                     >
                     </rect>
                     <Axis 
-                        width={gradientW}
+                        width={dim.gradientW}
                         height={this.state.gradientH}
                         orientation={'right'}
                         scale={this.state.yScale}
-                        x={gradientW}
-                        y={gradientMargin}
+                        x={dim.gradientW}
+                        y={dim.gradientMargin}
                     />
                 </svg>
                 <svg 
-                    width={this.props.width - legendW}
+                    width={this.props.width - dim.legendW}
                     height={this.props.height}
                     className={`mapSVG-${this.props.indicator.key}`}
                     ref={this.mapRef}
@@ -289,7 +286,7 @@ class Map extends Component {
                         <rect
                             x={0}
                             y={0}
-                            width={this.props.width - legendW}
+                            width={this.props.width - dim.legendW}
                             height={this.props.height}
                             fill={colors.graphBkgd}
                             fillOpacity={0.8}
