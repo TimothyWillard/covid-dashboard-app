@@ -11,7 +11,7 @@ import MainMap from './Map/MainMap';
 import Methodology from './Methodology';
 import About from './About';
 
-export default function MainContainer(props) {
+export default function MainContainer() {
     const [ initialGraphW, initialGraphH ] = getGraphContainerDimensions();
     const [ initialMapContainerW, initialMapContainerH ] = getGraphContainerDimensions();
 
@@ -66,7 +66,7 @@ export default function MainContainer(props) {
 
     function handleCountySelect(geoid) {
         setGeoid(geoid);
-    };
+    }
 
     function handleUpload(dataset, geoid) {
         // TODO: I think file upload handling is going to be a bit 
@@ -74,7 +74,7 @@ export default function MainContainer(props) {
         // invoke the useEffect above the resets/reloads the dataset.
         setDataset(dataset); 
         setGeoid(geoid);
-    };
+    }
 
     const mainChartWidth = graphW - margin.left - margin.right;
     const mainChartHeight = graphH * dimMultipliers.chartDesktopH
