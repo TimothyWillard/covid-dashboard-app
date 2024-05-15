@@ -112,8 +112,8 @@ MapContainer.propTypes = {
     width: PropType.number.isRequired,
     height: PropType.number.isRequired,
     scenario: PropType.string.isRequired,
-    firstDate: PropType.string.isRequired,
-    selectedDate: PropType.string.isRequired,
+    firstDate: PropType.instanceOf(Date).isRequired,
+    selectedDate: PropType.instanceOf(Date).isRequired,
     countyBoundaries: PropType.object.isRequired,
     indicatorsForCounty: PropType.object.isRequired,
     dateSliderActive: PropType.bool.isRequired
