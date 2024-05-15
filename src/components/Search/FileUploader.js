@@ -2,17 +2,19 @@ import React, { Component } from 'react';
 import { Col, Upload, Button } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 
+import { validateSize, validateJson } from '../../utils/utils';
+
 class FileUploader extends Component {
 
     beforeUpload = (file) => {
         const reader = new FileReader();
-        if (this.validateSize(file)) {
+        if (validateSize(file)) {
             reader.onload = () => {
                 if (typeof reader.result === "string") {
                     const json = JSON.parse(reader.result);
                     const geoid = file.name.replace('.json', '');
 
-                    if (this.validateFile(json)) {
+                    if (validateJson(json)) {
                         this.props.onUpload(json, geoid);
                     }
                 }
@@ -21,21 +23,6 @@ class FileUploader extends Component {
 
             // Prevent upload
             return false;
-        }
-    };
-
-    validateFile = (json) => {
-        console.log(`validateFile(): ${json})`);
-        return true;
-    };
-
-    validateSize = (file) => {
-        const mbMaxSize = 1024 * 1024 * 100;  // 100MB
-        if (file.size > mbMaxSize) {
-            alert(`File is too large, please upload a file less than ${mbMaxSize}`);
-            return false;
-        } else {
-            return true;
         }
     };
 

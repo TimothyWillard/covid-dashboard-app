@@ -149,3 +149,17 @@ export function getStepValue(seriesMax) {
 }
 
 export const getReadableDate = timeFormat('%b %d, %Y');
+
+export function validateSize(file) {
+  const mbMaxSize = 1024 * 1024 * 100;  // 100MB
+  if (file.size > mbMaxSize) {
+      alert(`File is too large, please upload a file less than ${mbMaxSize}`);
+      return false;
+  }
+  return true;
+}
+
+export function validateJson(json) {
+  console.log(`validateFile(): ${json})`);
+  return true;
+}
