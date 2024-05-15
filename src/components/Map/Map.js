@@ -1,309 +1,283 @@
-import React, { Component } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { geoPath, geoMercator, geoTransverseMercator, geoConicConformal, geoAlbers } from 'd3-geo';
 import { scaleLinear } from 'd3-scale';
 import { max } from 'd3-array';
-import { zoom, zoomIdentity } from 'd3-zoom';
+import { zoom } from 'd3-zoom';
 import { select } from 'd3-selection';
 import _ from 'lodash';
 import { Tooltip } from 'antd';
-import Axis from '../Graph/Axis';
+import PropTypes from 'prop-types'
 
+import Axis from '../Graph/Axis';
 import { addCommas } from '../../utils/utils';
 import colors from '../../utils/colors';
 import { STATEPLANES } from '../../utils/projectionSettings';
 import { dim } from '../../utils/constants'
 
-class Map extends Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            minVal: 0,
-            maxVal: 0,
-            countyBoundaries: {},
-            yScale: scaleLinear(),
-            countyIsHovered: false,
-            hoveredCounty: null,
-            tooltipText: ''
-        }
-        this.tooltipRef = React.createRef();
-        this.mapRef = React.createRef();
-        this.zoom = zoom()
-            .scaleExtent([1,9])
-            .on('zoom', this.zoomed);
-    }
+const Map = ({ indicator, geoid, scenario, dateIdx, countyBoundaries, indicatorsForCounty, width, height, lowColor, highColor, strokeWidth, strokeHoverWidth, handleZoom }) => {
+    const [ countyIsHovered, setCountyIsHovered ] = useState(false);
+    const [ hoveredCounty, setHoveredCounty ] = useState(null); 
+    const [ tooltipText, setTooltipText ] = useState('');
+    const [ gradientH, setGradientH ] = useState(0);
 
-    componentDidMount() {
-        const gradientH = (this.props.width - dim.gradientMargin) / 2;
-        this.setState({ gradientH }, () => this.calculateScales());
-        if (this.mapRef.current) {
-            const mapNode = select(this.mapRef.current)
-            mapNode.call(this.zoom)
-        }
-        window.addEventListener('scroll', this.handleWindowScrollTooltip)
-    }
+    const mapRef = useRef(null);
+    const zoomRef = useRef(null);
 
-    componentDidUpdate(prevProps) {
-        if (prevProps.countyBoundaries !== this.props.countyBoundaries ||
-            prevProps.indicatorsForCounty !== this.props.indicatorsForCounty ||
-            prevProps.scenario !== this.props.scenario) {
-                const gradientH = (this.props.width - dim.gradientMargin) / 2;
-                this.setState({ gradientH }, () => this.calculateScales());
-            if (this.mapRef.current) {
-                const mapNode = select(this.mapRef.current)
-                mapNode.call(this.zoom.transform, zoomIdentity)
-            }    
-        }
-    }
-
-    componentWillUnmount() {
-        window.removeEventListener('scroll', this.handleWindowScrollTooltip)
-    }
-
-    calculateScales = () => {
-        const { indicator, countyBoundaries, indicatorsForCounty, scenario } = this.props;
-        let statArray = [];
-        let normalizedStatArray = [];
-        const normalizedIndicatorsAll = []
-        
-        // iterate over this.props.countyBoundaries to plot up boundaries
-        // join each geoid to indicatorsForCounty[geoid][scenario][indicator][dateIdx]
-        for (let i = 0; i < countyBoundaries.features.length; i++) {
-            const geoid = countyBoundaries.features[i].properties.geoid;
-            const population = countyBoundaries.features[i].properties.population;
-            // check to see if indicators exist for this county
-            if (indicatorsForCounty[geoid]) {
-                statArray = indicatorsForCounty[geoid][scenario][indicator.key]
-                if (statArray) {
-                    normalizedStatArray = statArray.map( value => {
-                        return (value / population) * 10000
-                    })
-                    normalizedIndicatorsAll.push(normalizedStatArray)
-                } else {
-                    console.log('Missing a indicator key')
-                }
-            } 
-            countyBoundaries.features[i].properties[indicator.key] = statArray
-            countyBoundaries.features[i].properties[`${indicator.key}Norm`] = normalizedStatArray
-        }
-        // get max of all values in indicator array for colorscale
-        const maxVal = max(Object.values(indicatorsForCounty).map( county => {
-            return max(county[scenario][indicator.key])
-        }))
-        const minVal = maxVal * 0.3333;
-
-        const maxValNorm = max(normalizedIndicatorsAll.map( val => {
-            return max(val)
-        }))
-        const minValNorm = maxValNorm * 0.3333;
-        const yScale = scaleLinear().range([this.state.gradientH, 0]).domain([0, maxValNorm])
-        this.setState({ minVal, maxVal, countyBoundaries, yScale, minValNorm, maxValNorm })
-    }
-
-    drawCounties = () => {
-        // optimize projection for CA or NY
-        // TODO add to constants file for other states
-        const { geoid, indicator, width, height } = this.props;
-        const { lowColor, highColor, dateIdx } = this.props;
-        const { maxValNorm, tooltipText, hoveredCounty, countyBoundaries } = this.state;
-        const statePlane = STATEPLANES[geoid.slice(0,2)]
-        const parallels = STATEPLANES[geoid.slice(0,2)].parallels ? STATEPLANES[geoid.slice(0,2)].parallels : []
-        const rotation = STATEPLANES[geoid.slice(0,2)].rotate ? STATEPLANES[geoid.slice(0,2)].rotate : []
-        let projection
-        if (statePlane.proj === 'merc') {
-            projection = geoMercator()
-                // .parallels(parallels)
-                // .rotate(rotation)
-                .fitSize([width - dim.legendW, height], countyBoundaries)
-        } else if (statePlane.proj === 'tmerc') {
-            projection = geoTransverseMercator()
-                // .parallels(parallels)
-                .rotate(rotation)
-                .fitSize([width - dim.legendW, height], countyBoundaries)
-        } else if (statePlane.proj === 'lcc'){
-            projection = geoConicConformal()
-                .parallels(parallels)
-                .rotate(rotation)
-                .fitSize([width - dim.legendW, height], countyBoundaries)
-        } else {
-            // albers
-            projection = geoAlbers()
-                .parallels(parallels)
-                .rotate(rotation)
-                .fitSize([width - dim.legendW, height], countyBoundaries)
-        }
-
-        const pathGenerator = geoPath().projection(projection)
-        const ramp = scaleLinear().domain([ 0, maxValNorm ])
-            .range([lowColor, highColor])
-
-        const counties = countyBoundaries.features.map((d,i) => {
-            return (
-                <Tooltip
-                    key={`tooltip-county-boundary-${i}`}
-                    title={tooltipText}
-                    open={hoveredCounty === d.properties.geoid}
-                    data-html="true"
-                    destroyTooltipOnHide={true}
-                >
-                    <path
-                        key={`county-boundary-${i}`}
-                        d={pathGenerator(d)}
-                        style={{
-                            stroke: (hoveredCounty === d.properties.geoid) || 
-                                (geoid === d.properties.geoid) ? 
-                                highColor : colors.gray,
-                            strokeWidth: (hoveredCounty === d.properties.geoid) || 
-                                (geoid === d.properties.geoid) ? 
-                                this.props.strokeHoverWidth : 
-                                this.props.strokeWidth,
-                            fill: d.properties[`${indicator.key}Norm`].length > 0 ? 
-                                ramp(d.properties[`${indicator.key}Norm`][dateIdx]) : 
-                                colors.lightGray,
-                            fillOpacity: 1,
-                            cursor: 'pointer'
-                        }}
-                        className='counties'
-                        onMouseEnter={() => this.handleCountyEnter(d)}
-                        onMouseLeave={() => this.handleCountyLeave(d)}
-                    />
-                </Tooltip>
-            )})
-         return counties
-    }
-
-    handleCountyEnter = _.debounce((feature) => {
-        const { indicator, dateIdx } = this.props;
-        const tooltips = document.querySelectorAll('.ant-tooltip')
-        tooltips.forEach(tooltip => {
-            tooltip.style.visibility = "hidden"
-        })
-        if (this.state.hoveredCounty !== feature.properties.geoid) {
-            this.setState({ hoveredCounty: null, countyIsHovered: false })
-        }
-        
-        if (!this.state.countyIsHovered) {
-            let statInfo = ''
-            if (feature.properties[indicator.key].length > 0) {
-                statInfo = `${indicator.name}: ${addCommas(feature.properties[indicator.key][dateIdx])}`
-            } else {
-                statInfo = 'No Indicator Data'
+    const handleCountyEnter = _.debounce((feature) => {
+        const tooltips = document.querySelectorAll('.ant-tooltip');
+        if (tooltips) {
+            tooltips.forEach(tooltip => {
+                tooltip.style.visibility = "hidden"
+            });
+            if (hoveredCounty !== feature.properties.geoid) {
+                setHoveredCounty(null);
+                setCountyIsHovered(false);
             }
-            const text = `${feature.properties.name} County <br>
-                        Population: ${addCommas(feature.properties.population)} <br>
-                        ${statInfo}`
-
-            const tooltipText = () =>  (<div dangerouslySetInnerHTML={{__html: text}}></div>)
-
-            this.setState({
-                hoveredCounty: feature.properties.geoid, 
-                countyIsHovered: true, 
-                tooltipText 
-            })
-        }
-    }, 10)
-
-    handleCountyLeave = _.debounce((feature) => {
-        const tooltips = document.querySelectorAll('.ant-tooltip')
-        tooltips.forEach(tooltip => {
-            tooltip.style.visibility = "hidden"
-        })
-        if (this.state.hoveredCounty === feature.properties.geoid) {
-            this.setState({ hoveredCounty: null, countyIsHovered: false })
-        }
-        
-    }, 10)
-
-    handleMouseMove = () => {
-        this.setState({ hoveredCounty: null, countyIsHovered: false })
-    }
-
-    zoomed = (event) => {
-        this.props.handleZoom(event)
-    }
-
-    handleZoomIn = () => {
-        if (this.mapRef.current) {
-            // scale zoom on button press
-            const mapNode = select(this.mapRef.current)
-            this.zoom.scaleBy(mapNode.transition().duration(750), 1.2);
-        }
-    }
-
-    handleZoomOut = () => {
-        if (this.mapRef.current) {
-            // scale zoom on button press
-            const mapNode = select(this.mapRef.current)
-            this.zoom.scaleBy(mapNode.transition().duration(750), 0.8);
-        }
-    }
-
-    render() {
-        return (
-            <div className="map-parent">
-                <div className='titleNarrow map-title'>{`${this.props.indicator.name} per 10K people`}</div>
-                <div className="map-parent">
-                    <div><button className="zoom" id="zoom_in" onClick={this.handleZoomIn}>+</button></div>
-                    <div><button className="zoom" id="zoom_out" onClick={this.handleZoomOut}>-</button></div>
-                </div>
-                <svg width={dim.legendW} height={this.props.height}>
-                    <defs>
-                        <linearGradient 
-                            id={`map-legend-gradient-${this.props.indicator.key}`} 
-                            x1="100%"
-                            y1="0%"
-                            x2="100%"
-                            y2="100%"
-                            spreadMethod="pad"
-                        >
-                            <stop offset="0%" stopColor={this.props.highColor} stopOpacity="1"></stop>
-                            <stop offset="100%" stopColor={this.props.lowColor} stopOpacity="1"></stop>
-                        </linearGradient>
-                    </defs>
-                    <rect
-                        width={dim.gradientW}
-                        height={this.state.gradientH}
-                        transform={`translate(0, ${dim.gradientMargin})`}
-                        style={{ fill: `url(#map-legend-gradient-${this.props.indicator.key}` }}
-                    >
-                    </rect>
-                    <Axis 
-                        width={dim.gradientW}
-                        height={this.state.gradientH}
-                        orientation={'right'}
-                        scale={this.state.yScale}
-                        x={dim.gradientW}
-                        y={dim.gradientMargin}
-                    />
-                </svg>
-                <svg 
-                    width={this.props.width - dim.legendW}
-                    height={this.props.height}
-                    className={`mapSVG-${this.props.indicator.key}`}
-                    ref={this.mapRef}
-                >
-                    <g>
-                        {/* debug green svg */}
-                        <rect
-                            x={0}
-                            y={0}
-                            width={this.props.width - dim.legendW}
-                            height={this.props.height}
-                            fill={colors.graphBkgd}
-                            fillOpacity={0.8}
-                            stroke={'#00ff00'}
-                            strokeWidth='1'
-                            strokeOpacity={0}
-                            style={{ 'cursor': 'grab' }}
-                            onMouseMove={this.handleMouseMove}
-                            onMouseLeave={this.handleMouseMove}
-                        /> 
-                        {this.state.countyBoundaries.features && this.drawCounties()}
-                    </g>
-                </svg>
-            </div>
             
-        )
-    }
-}
+            if (!countyIsHovered) {
+                let statInfo = 'No Indicator Data'
+                if (feature.properties[indicator.key] && feature.properties[indicator.key].length > 0) {
+                    statInfo = `${indicator.name}: ${addCommas(feature.properties[indicator.key][dateIdx])}`;
+                } 
 
-export default Map
+                const text = `${feature.properties.name} County <br>
+                            Population: ${addCommas(feature.properties.population)} <br>
+                            ${statInfo}`
+    
+                const tooltipText = () =>  (<div dangerouslySetInnerHTML={{__html: text}}></div>)
+                
+                setHoveredCounty(feature.properties.geoid);
+                setCountyIsHovered(true);
+                setTooltipText(tooltipText);
+            }
+        }
+    }, 10);
+
+    const handleCountyLeave = _.debounce((feature) => {
+        const tooltips = document.querySelectorAll('.ant-tooltip');
+        if (tooltips) {
+            tooltips.forEach(tooltip => {
+                tooltip.style.visibility = 'hidden';                
+            });
+            if (hoveredCounty === feature.properties.geoid) {
+                setHoveredCounty(null);
+                setCountyIsHovered(false);
+            }
+        }
+    }, 10);
+
+    const handleMouseMove = useCallback(() => {
+        setHoveredCounty(null);
+        setCountyIsHovered(false);
+    }, []);
+
+    const zoomed = useCallback((event) => {
+        handleZoom(event);
+    }, [ handleZoom ]);
+
+    const handleZoomIn = useCallback(() => {
+        if (mapRef.current && zoomRef.current) {
+            // scale zoom on button press
+            const mapNode = select(mapRef.current)
+            zoomRef.current.scaleBy(mapNode.transition().duration(750), 1.2);
+        }
+    }, [ mapRef ]);
+
+    const handleZoomOut = useCallback(() => {
+        if (mapRef.current && zoomRef.current) {
+            // scale zoom on button press
+            const mapNode = select(mapRef.current)
+            zoomRef.current.scaleBy(mapNode.transition().duration(750), 0.8);
+        }
+    }, [ mapRef ]);
+
+    useEffect(() => {
+        setGradientH(0.5*(width-dim.gradientMargin));
+        if (mapRef.current && zoomRef.current) {
+            select(mapRef.current).call(zoomRef.current);
+        }
+        return () => {
+            setGradientH(0);
+        }
+    }, [ width, mapRef, zoomRef ]);
+
+    useEffect(() => {
+        zoomRef.current = zoom()
+            .scaleExtent([1, 9])
+            .on('zoom', zoomed);
+        return () => {
+            zoomRef.current = null;
+        }
+    }, [ handleZoom, zoomed ]);
+
+    // Previously in calculateScales
+    let statArray = [];
+    let normalizedStatArray = [];
+    let normalizedIndicatorsAll = [];
+    for (let i = 0; i < countyBoundaries.features.length; ++i) {
+        const { geoid: localGeoid, population: localPopulation } = countyBoundaries.features[i].properties;
+        if (indicatorsForCounty[localGeoid]) {
+            statArray = indicatorsForCounty[localGeoid][scenario][indicator.key];
+            if (statArray) {
+                normalizedStatArray = statArray.map(val => {
+                    return 10_000.0*(val/localPopulation);
+                });
+                normalizedIndicatorsAll.push(normalizedStatArray);
+            } else {
+                console.log(`Missing the indicator key '${indicator.key}' for geoid '${localGeoid}' and scenario '${scenario}'.`);
+            }
+        }
+        countyBoundaries.features[i].properties[indicator.key] = statArray;
+        countyBoundaries.features[i].properties[`${indicator.key}Norm`] = normalizedStatArray
+    }
+    const maxValueNorm = max(normalizedIndicatorsAll.map(v => {
+        return max(v);
+    }))
+    const yScale = scaleLinear()
+        .range([gradientH, 0])
+        .domain([0, maxValueNorm]);
+
+    // Previously in drawCounties
+    const stateFips = geoid.slice(0,2);
+
+    const statePlane = STATEPLANES[stateFips];
+    const parallels = STATEPLANES[stateFips].parallels ? STATEPLANES[stateFips].parallels : [];
+    const rotation = STATEPLANES[stateFips].rotate ? STATEPLANES[stateFips].rotate : [];
+
+    let projection;
+    if (statePlane.proj === 'merc') {
+        projection = geoMercator()
+            // .parallels(parallels)
+            // .rotate(rotation)
+            .fitSize([width - dim.legendW, height], countyBoundaries);
+    } else if (statePlane.proj === 'tmerc') {
+        projection = geoTransverseMercator()
+            // .parallels(parallels)
+            .rotate(rotation)
+            .fitSize([width - dim.legendW, height], countyBoundaries);
+    } else if (statePlane.proj === 'lcc') {
+        projection = geoConicConformal()
+            .parallels(parallels)
+            .rotate(rotation)
+            .fitSize([width - dim.legendW, height], countyBoundaries);
+    } else {
+        projection = geoAlbers()
+            .parallels(parallels)
+            .rotate(rotation)
+            .fitSize([width - dim.legendW, height], countyBoundaries);
+    }
+
+    const pathGenerator = geoPath()
+        .projection(projection);
+    const ramp = scaleLinear()
+        .domain([ 0, maxValueNorm ])
+        .range([lowColor, highColor]);
+
+    const counties = countyBoundaries.features.map((d, i) => {
+        return (
+            <Tooltip
+                key={`tooltip-county-boundary-${i}`}
+                title={tooltipText}
+                open={hoveredCounty === d.properties.geoid}
+                data-html="true"
+                destroyTooltipOnHide={true}>
+                <path
+                    key={`county-boundary-${i}`}
+                    d={pathGenerator(d)}
+                    style={{
+                        stroke: (hoveredCounty === d.properties.geoid) || (geoid === d.properties.geoid) ? highColor : colors.gray,
+                        strokeWidth: (hoveredCounty === d.properties.geoid) || (geoid === d.properties.geoid) ? strokeHoverWidth : strokeWidth,
+                        fill: (d.properties[`${indicator.key}Norm`] && d.properties[`${indicator.key}Norm`].length > 0) ? ramp(d.properties[`${indicator.key}Norm`][dateIdx]) : colors.lightGray,
+                        fillOpacity: 1,
+                        cursor: 'pointer'
+                    }}
+                    className='counties'
+                    onMouseEnter={() => handleCountyEnter(d)}
+                    onMouseLeave={() => handleCountyLeave(d)}
+                />
+            </Tooltip>
+        );
+    });
+    
+    return (
+        <div className="map-parent">
+            <div className='titleNarrow map-title'>{`${indicator.name} per 10K people`}</div>
+            <div className="map-parent">
+                <div><button className="zoom" id="zoom_in" onClick={handleZoomIn}>+</button></div>
+                <div><button className="zoom" id="zoom_out" onClick={handleZoomOut}>-</button></div>
+            </div>
+            <svg width={dim.legendW} height={height}>
+                <defs>
+                    <linearGradient 
+                        id={`map-legend-gradient-${indicator.key}`} 
+                        x1="100%"
+                        y1="0%"
+                        x2="100%"
+                        y2="100%"
+                        spreadMethod="pad"
+                    >
+                        <stop offset="0%" stopColor={highColor} stopOpacity="1"></stop>
+                        <stop offset="100%" stopColor={lowColor} stopOpacity="1"></stop>
+                    </linearGradient>
+                </defs>
+                <rect
+                    width={dim.gradientW}
+                    height={gradientH}
+                    transform={`translate(0, ${dim.gradientMargin})`}
+                    style={{ fill: `url(#map-legend-gradient-${indicator.key}` }}
+                >
+                </rect>
+                <Axis 
+                    width={dim.gradientW}
+                    height={gradientH}
+                    orientation={'right'}
+                    scale={yScale}
+                    x={dim.gradientW}
+                    y={dim.gradientMargin}
+                />
+            </svg>
+            <svg 
+                width={width - dim.legendW}
+                height={height}
+                className={`mapSVG-${indicator.key}`}
+                ref={mapRef}>
+                <g>
+                    {/* debug green svg */}
+                    <rect
+                        x={0}
+                        y={0}
+                        width={width - dim.legendW}
+                        height={height}
+                        fill={colors.graphBkgd}
+                        fillOpacity={0.8}
+                        stroke={'#00ff00'}
+                        strokeWidth='1'
+                        strokeOpacity={0}
+                        style={{ 'cursor': 'grab' }}
+                        onMouseMove={handleMouseMove}
+                        onMouseLeave={handleMouseMove}
+                    /> 
+                    {countyBoundaries.features && counties}
+                </g>
+            </svg>
+        </div>
+    );
+};
+
+Map.propTypes = {
+    indicator: PropTypes.object.isRequired,
+    geoid: PropTypes.string.isRequired,
+    scenario: PropTypes.string.isRequired,
+    dateIdx: PropTypes.number.isRequired,
+    countyBoundaries: PropTypes.object.isRequired,
+    indicatorsForCounty: PropTypes.object.isRequired,
+    width: PropTypes.number.isRequired,
+    height: PropTypes.number.isRequired,
+    lowColor: PropTypes.string.isRequired,
+    highColor: PropTypes.string.isRequired,
+    strokeWidth: PropTypes.number.isRequired, 
+    strokeHoverWidth: PropTypes.number.isRequired, 
+    handleZoom: PropTypes.func.isRequired,
+};
+
+export default Map;
