@@ -2,6 +2,7 @@ import React, { useCallback } from 'react';
 import { Select } from 'antd';
 import PropTypes from 'prop-types';
 
+import { defaultGeoid } from '../../utils/constants';
 import { GEOIDS } from '../../utils/geoids';
 
 const { Option } = Select;
@@ -34,7 +35,7 @@ const SearchBar = ({ style, onCountySelect}) => {
     return (
         <Select
             showSearch
-            placeholder="Search for your state or county"
+            placeholder={`Search for your state or county, like ${GEOIDS[defaultGeoid]}.`}
             optionFilterProp="children"
             style={style}
             size={"large"}
