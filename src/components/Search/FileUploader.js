@@ -1,17 +1,10 @@
 import React, { Component } from 'react';
 import { Col, Upload, Button } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
-import { GeoId } from "../../utils/constantsTypes";
-import { RcFile } from "antd/lib/upload";
 
+class FileUploader extends Component {
 
-interface Props {
-    onUpload: (json: JSON, geoId: GeoId) => void,
-}
-
-class FileUploader extends Component<Props> {
-
-    beforeUpload = (file: RcFile) => {
+    beforeUpload = (file) => {
         const reader = new FileReader();
         if (this.validateSize(file)) {
             reader.onload = () => {
@@ -23,7 +16,6 @@ class FileUploader extends Component<Props> {
                         this.props.onUpload(json, geoid);
                     }
                 }
-
             };
             reader.readAsText(file);
 
@@ -32,13 +24,13 @@ class FileUploader extends Component<Props> {
         }
     };
 
-    validateFile = (json: JSON) => {
+    validateFile = (json) => {
         console.log(`validateFile(): ${json})`);
         return true;
     };
 
-    validateSize = (file: RcFile) => {
-        const mbMaxSize = 1024 * 1024 * 100;  //100mb
+    validateSize = (file) => {
+        const mbMaxSize = 1024 * 1024 * 100;  // 100MB
         if (file.size > mbMaxSize) {
             alert(`File is too large, please upload a file less than ${mbMaxSize}`);
             return false;
@@ -52,10 +44,9 @@ class FileUploader extends Component<Props> {
             <Col className="gutter-row" span={6}>
                 <Upload
                     accept=".json"
-                    // @ts-ignore beforeUpload needs to return false to prevent upload
                     beforeUpload={this.beforeUpload}>
                     <Button>
-                        <UploadOutlined/> Click to Upload
+                        <UploadOutlined /> Click to Upload
                     </Button>
                 </Upload>
             </Col>
