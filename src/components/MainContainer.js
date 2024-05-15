@@ -4,7 +4,7 @@ import { Layout } from 'antd';
 import { defaultGeoid, margin, dimMultipliers } from '../utils/constants';
 import { getGraphContainerDimensions, getMapContainerDimensions } from '../utils/dimensions';
 import { fetchDataset, fetchActuals, fetchConfig } from '../utils/fetch';
-import Search from './Search/Search.tsx'
+import Search from './Search/Search'
 import MainGraph from './Graph/MainGraph';
 import MainChart from './Chart/MainChart';
 import MainMap from './Map/MainMap';

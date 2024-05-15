@@ -5,22 +5,10 @@ import { ReactComponent as GraphLogo } from '../../assets/graph.svg';
 import { ReactComponent as ChartLogo } from '../../assets/chart.svg';
 import { ReactComponent as MapLogo } from '../../assets/globe.svg';
 import { styles } from '../../utils/constants';
-import { GeoId } from "../../utils/constantsTypes";
 import SearchBar from "./SearchBar";
 
-interface Props {
-    onCountySelect: () => void,
-    onFileUpload: (json: JSON, geoId: GeoId) => void,
-    geoid: GeoId,
-}
-
-interface State {
-    fileName: string,
-    showFileUpload: boolean,
-}
-
-class Search extends Component<Props, State> {
-    constructor(props: Props) {
+class Search extends Component {
+    constructor(props) {
         super(props);
         this.state = {
             fileName: '',
@@ -28,7 +16,7 @@ class Search extends Component<Props, State> {
         }
     }
 
-    handleUpload = (json: JSON, geoId: GeoId) => {
+    handleUpload = (json, geoId) => {
         this.props.onFileUpload(json, geoId);
     };
 

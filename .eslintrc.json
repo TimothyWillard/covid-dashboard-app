@@ -1,7 +1,6 @@
 {
     "env": {
-        "browser": true,
-        "es2021": true
+        "browser": true
     },
     "extends": [
         "eslint:recommended",
@@ -12,7 +11,7 @@
         "ecmaFeatures": {
             "jsx": true
         },
-        "ecmaVersion": 12,
+        "ecmaVersion": 2018,
         "sourceType": "module"
     },
     "plugins": [
@@ -20,6 +19,9 @@
         "react-hooks"
     ],
     "rules": {
-        "react-hooks/exhaustive-deps": "warn"
+        "react-hooks/exhaustive-deps": "warn",
+        "no-unused-vars": "warn",
+        "no-extra-semi": "warn",
+        "react/prop-types": "warn"
     }
 }
