@@ -124,7 +124,7 @@ export function addCommas(x) {
 
 export function getDateIdx(firstDate, currentDate) {
   return timeDay.count(firstDate, currentDate);
-};
+}
 
 export function capitalize(s) {
   if (typeof s !== 'string') return ''
