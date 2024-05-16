@@ -314,11 +314,11 @@ const Legend = ({ showConfBounds, showHoveredSim, showActual, x, y }) => {
 }
 
 Legend.propTypes = {
-    showConfBounds: PropTypes.bool.isRequired,
-    showHoveredSim: PropTypes.bool.isRequired,
-    showActual: PropTypes.bool.isRequired,
-    x: PropTypes.number.isRequired,
-    y: PropTypes.number.isRequired,
+    showConfBounds: PropTypes.bool,
+    showHoveredSim: PropTypes.bool, // This might need to be a number?
+    showActual: PropTypes.bool,
+    x: PropTypes.number,
+    y: PropTypes.number,
 };
 
 export default Legend;
