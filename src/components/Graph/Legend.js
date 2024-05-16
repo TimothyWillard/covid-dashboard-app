@@ -1,14 +1,16 @@
 import React from 'react';
+import PropTypes from 'prop-types';
+
 import colors from '../../utils/colors';
 
-function Legend(props) {
-    if (!props.showConfBounds && !props.showHoveredSim) {
+const Legend = ({ showConfBounds, showHoveredSim, showActual, x, y }) => {
+    if (!showConfBounds && !showHoveredSim) {
         return (
             <g className="legend-container">
                 <g className="legend">
                     <rect
-                        x={props.x}
-                        y={props.y}
+                        x={x}
+                        y={y}
                         width={160}
                         height={50}
                         fill={colors.graphBkgd}
@@ -16,16 +18,16 @@ function Legend(props) {
                     />
                     <g className="legend-above" >
                         <line
-                            x1={props.x}
-                            y1={props.y}
-                            x2={props.x + 20}
-                            y2={props.y}
+                            x1={x}
+                            y1={y}
+                            x2={x + 20}
+                            y2={y}
                             stroke={colors.red}
                             strokeWidth="1"
                         />
                         <text
-                            x={props.x + 25}
-                            y={props.y + 4}
+                            x={x + 25}
+                            y={y + 4}
                             opacity={0.65}
                             className="titleNarrow"
                         >
@@ -36,16 +38,16 @@ function Legend(props) {
                 <g className="legend">
                     <g className="legend-below">
                         <line
-                            x1={props.x}
-                            y1={props.y + 20}
-                            x2={props.x + 20}
-                            y2={props.y + 20}
+                            x1={x}
+                            y1={y + 20}
+                            x2={x + 20}
+                            y2={y + 20}
                             stroke={colors.green}
                             strokeWidth="1"
                         />
                         <text
-                            x={props.x + 25}
-                            y={props.y + 20 + 4}
+                            x={x + 25}
+                            y={y + 20 + 4}
                             opacity={0.65}
                             className="titleNarrow"
                         >
@@ -56,17 +58,17 @@ function Legend(props) {
                 <g className="legend">
                     <g className="legend-runDate">
                         <line
-                            x1={props.x + 10}
-                            y1={props.y + 32}
-                            x2={props.x + 10}
-                            y2={props.y + 48}
+                            x1={x + 10}
+                            y1={y + 32}
+                            x2={x + 10}
+                            y2={y + 48}
                             stroke={colors.blue}
                             strokeOpacity={0.8}
                             strokeWidth="1"
                         />
                         <text
-                            x={props.x + 25}
-                            y={props.y + 40 + 4}
+                            x={x + 25}
+                            y={y + 40 + 4}
                             opacity={0.65}
                             className="titleNarrow"
                         >
@@ -75,18 +77,18 @@ function Legend(props) {
                     </g>
                 </g>
                 {
-                props.showActual &&
+                showActual &&
                     <g className="legend">
                         <g className="legend-actual">
                             <circle
-                                cx={props.x + 10}
-                                cy={props.y + 60}
+                                cx={x + 10}
+                                cy={y + 60}
                                 fill={colors.actual}
                                 r={2}
                             />
                             <text
-                                x={props.x + 25}
-                                y={props.y + 60 + 4}
+                                x={x + 25}
+                                y={y + 60 + 4}
                                 opacity={0.65}
                                 className="titleNarrow"
                             >
@@ -97,13 +99,13 @@ function Legend(props) {
                 }
             </g>
         )     
-    } else if (props.showConfBounds && !props.showHoveredSim) {
+    } else if (showConfBounds && !showHoveredSim) {
         return (
             <g className="legend-container">
                 <g className="legend">
                     <rect
-                        x={props.x}
-                        y={props.y}
+                        x={x}
+                        y={y}
                         width={160}
                         height={50}
                         fill={colors.graphBkgd}
@@ -111,16 +113,16 @@ function Legend(props) {
                     />
                     <g className="legend-mean">
                         <line
-                            x1={props.x}
-                            y1={props.y}
-                            x2={props.x + 20}
-                            y2={props.y}
+                            x1={x}
+                            y1={y}
+                            x2={x + 20}
+                            y2={y}
                             stroke={colors.green}
                             strokeWidth="2"
                         />
                         <text
-                            x={props.x + 25}
-                            y={props.y + 4}
+                            x={x + 25}
+                            y={y + 4}
                             opacity={0.65}
                             className="titleNarrow"
                         >
@@ -131,16 +133,16 @@ function Legend(props) {
                 <g className="legend">
                     <g className="legend-confBounds">
                         <rect
-                            x={props.x}
-                            y={props.y + 15}
+                            x={x}
+                            y={y + 15}
                             width={20} 
                             height={12}
                             fill={colors.green}
                             fillOpacity={0.3}
                         />
                         <text
-                            x={props.x + 25}
-                            y={props.y + 20 + 4}
+                            x={x + 25}
+                            y={y + 20 + 4}
                             opacity={0.65}
                             className="titleNarrow"
                         >
@@ -152,16 +154,16 @@ function Legend(props) {
                 <g className="legend">
                     <g className="legend-sims">
                         <line
-                            x1={props.x}
-                            y1={props.y + 40}
-                            x2={props.x + 20}
-                            y2={props.y + 40}
+                            x1={x}
+                            y1={y + 40}
+                            x2={x + 20}
+                            y2={y + 40}
                             stroke={colors.lightGray}
                             strokeWidth="1"
                         />
                         <text 
-                            x={props.x + 25}
-                            y={props.y + 40 + 4}
+                            x={x + 25}
+                            y={y + 40 + 4}
                             opacity={0.65}
                             className="titleNarrow"
                         >
@@ -172,17 +174,17 @@ function Legend(props) {
                 <g className="legend">
                     <g className="legend-runDate">
                         <line
-                            x1={props.x + 10}
-                            y1={props.y + 52}
-                            x2={props.x + 10}
-                            y2={props.y + 68}
+                            x1={x + 10}
+                            y1={y + 52}
+                            x2={x + 10}
+                            y2={y + 68}
                             stroke={colors.blue}
                             strokeOpacity={0.8}
                             strokeWidth="1"
                         />
                         <text
-                            x={props.x + 25}
-                            y={props.y + 60 + 4}
+                            x={x + 25}
+                            y={y + 60 + 4}
                             opacity={0.65}
                             className="titleNarrow"
                         >
@@ -191,18 +193,18 @@ function Legend(props) {
                     </g>
                 </g>
                 {
-                props.showActual &&
+                showActual &&
                     <g className="legend">
                         <g className="legend-actual">
                             <circle
-                                cx={props.x + 10}
-                                cy={props.y + 80}
+                                cx={x + 10}
+                                cy={y + 80}
                                 fill={colors.actual}
                                 r={2}
                             />
                             <text
-                                x={props.x + 25}
-                                y={props.y + 80 + 4}
+                                x={x + 25}
+                                y={y + 80 + 4}
                                 opacity={0.65}
                                 className="titleNarrow"
                             >
@@ -218,8 +220,8 @@ function Legend(props) {
             <g className="legend-container">
                 <g className="legend">
                     <rect
-                        x={props.x}
-                        y={props.y}
+                        x={x}
+                        y={y}
                         width={165}
                         height={50}
                         fill={colors.graphBkgd}
@@ -227,16 +229,16 @@ function Legend(props) {
                     />
                     <g className="legend-above" >
                         <line
-                            x1={props.x}
-                            y1={props.y}
-                            x2={props.x + 20}
-                            y2={props.y}
+                            x1={x}
+                            y1={y}
+                            x2={x + 20}
+                            y2={y}
                             stroke={colors.blue}
                             strokeWidth="1"
                         />
                         <text
-                            x={props.x + 25}
-                            y={props.y + 4}
+                            x={x + 25}
+                            y={y + 4}
                             opacity={0.65}
                             className="titleNarrow"
                         >
@@ -247,16 +249,16 @@ function Legend(props) {
                 <g className="legend">
                     <g className="legend-below">
                         <line
-                            x1={props.x}
-                            y1={props.y + 20}
-                            x2={props.x + 20}
-                            y2={props.y + 20}
+                            x1={x}
+                            y1={y + 20}
+                            x2={x + 20}
+                            y2={y + 20}
                             stroke={colors.gray}
                             strokeWidth="1"
                         />
                         <text
-                            x={props.x + 25}
-                            y={props.y + 20 + 4}
+                            x={x + 25}
+                            y={y + 20 + 4}
                             opacity={0.65}
                             className="titleNarrow"
                         >
@@ -267,17 +269,17 @@ function Legend(props) {
                 <g className="legend">
                     <g className="legend-runDate">
                         <line
-                            x1={props.x + 10}
-                            y1={props.y + 32}
-                            x2={props.x + 10}
-                            y2={props.y + 48}
+                            x1={x + 10}
+                            y1={y + 32}
+                            x2={x + 10}
+                            y2={y + 48}
                             stroke={colors.blue}
                             strokeOpacity={0.8}
                             strokeWidth="1"
                         />
                         <text
-                            x={props.x + 25}
-                            y={props.y + 40 + 4}
+                            x={x + 25}
+                            y={y + 40 + 4}
                             opacity={0.65}
                             className="titleNarrow"
                         >
@@ -286,18 +288,18 @@ function Legend(props) {
                     </g>
                 </g>
                 {
-                props.showActual &&
+                showActual &&
                     <g className="legend">
                         <g className="legend-actual">
                             <circle
-                                cx={props.x + 10}
-                                cy={props.y + 60}
+                                cx={x + 10}
+                                cy={y + 60}
                                 fill={colors.actual}
                                 r={2}
                             />
                             <text
-                                x={props.x + 25}
-                                y={props.y + 60 + 4}
+                                x={x + 25}
+                                y={y + 60 + 4}
                                 opacity={0.65}
                                 className="titleNarrow"
                             >
@@ -311,4 +313,12 @@ function Legend(props) {
     }
 }
 
-export default Legend
+Legend.propTypes = {
+    showConfBounds: PropTypes.bool.isRequired,
+    showHoveredSim: PropTypes.bool.isRequired,
+    showActual: PropTypes.bool.isRequired,
+    x: PropTypes.number.isRequired,
+    y: PropTypes.number.isRequired,
+};
+
+export default Legend;
