@@ -1,215 +1,200 @@
-import React, { Component, Fragment } from 'react';
-import Graph from '../Graph/Graph';
-import Axis from './Axis';
-import ThresholdLabel from '../Graph/ThresholdLabel';
+import React, { Fragment, useCallback } from 'react';
 import { scaleLinear, scaleUtc } from 'd3-scale';
 import { max, extent } from 'd3-array';
+import PropTypes from 'prop-types';
+
 import { formatTitle } from '../../utils/utils';
 import { margin } from '../../utils/constants';
 import { GEOIDS } from '../../utils/geoids.tsx';
 
-class GraphContainer extends Component {
-  constructor(props) {
-      super(props);
-      this.state = {
-          children: [],
-          scales: {},
-          scaleDomains: false,
-          graphWidth: 0,
-          graphHeight: 0,
-      }
-  }
+import Graph from './Graph';
+import Axis from './Axis';
+import ThresholdLabel from './ThresholdLabel';
 
-  componentDidMount() {
-      const { width, height, seriesList, selectedDates, scenarioList } = this.props;
-      if (seriesList.length > 0) {
-        const graphWidth = scenarioList.length === 2 ? width / 2 : width;
-        const graphHeight = height;
-        const scales = this.getScales(seriesList, selectedDates, graphWidth, height);
-
-        this.setState({scaleDomains: true});
-        this.updateGraphs(scenarioList, graphWidth, graphHeight, scales);
-      }
-  }
-
-  componentDidUpdate(prevProp) {
-
-    const { scenarioList, seriesList, selectedDates, height } = this.props;
-
-    // this deals with re-scaling and re-drawing graphs on window resize
-    if (prevProp.width !== this.props.width || prevProp.height !== this.props.height) {
-        const graphWidth = scenarioList.length === 2 ? this.props.width / 2 : this.props.width;
-        const graphHeight = height;
-        // need to adjust scale by length of scenario list
-        // break these out into X and Y (X out of the loop, Y in?)
-        const scales = this.getScales(seriesList, selectedDates, graphWidth, graphHeight);
-        this.updateGraphs(scenarioList, graphWidth, graphHeight, scales);
-    }
-    // technically both scenarioList and seriesList need to update
-    // but seriesList is updated later so using it to enter componentDidUpdate
-    // scenarioList updates happen then are immediately followed by seriesList update so can't rely on scenarioList check
-    // if the seriesList has changed, we want to remove existing graphs before drawing / updating
-    // the way to solve this is by keeping track of scenarioChange click events and putting those in the graph keys
-    // so that when the click events increment the keys change and the graph component remounts
-    if (prevProp.seriesList !== this.props.seriesList ||
-        prevProp.showConfBounds !== this.props.showConfBounds ||
-        prevProp.showActual !== this.props.showActual) {
-        const graphWidth = scenarioList.length === 2 ? this.props.width / 2 : this.props.width;
-        const graphHeight = height;
-        // need to adjust scale by length of scenario list
-        // break these out into X and Y (X out of the loop, Y in?)
-        const scales = this.getScales(seriesList, selectedDates, graphWidth, graphHeight);
-        this.updateGraphs(scenarioList, graphWidth, graphHeight, scales);
-    }
-}
-
-  updateGraphs = (scenarioList, graphWidth, graphHeight, scales) => {
-    const children = [];
-    const { scenarioClickCounter } = this.props;
-    for (let i = 0; i < scenarioList.length; i++) {
-        const showLegend = scenarioList.length === 1 ||
-            (scenarioList.length > 1 && i === 1) ? true : false;
-        const child = {
-            key: `${scenarioList[i].key}_Graph_${scenarioClickCounter}`,
-            graph: [],
-        }
-        child.graph.push(
-            <Graph
-                key={`${scenarioList[i].key}_Graph_${scenarioClickCounter}`}
-                keyVal={`${scenarioList[i].key}_Graph_${scenarioClickCounter}`}
-                indicator={this.props.indicator}
-                geoid={this.props.geoid}
-                scenario={this.props.scenarioList[i]}
-                severity={this.props.severity}
-                r0={this.props.r0}
-                animateTransition={this.props.animateTransition}
-                showConfBounds={this.props.showConfBounds}
-                confBounds={this.props.confBoundsList[i]}
-                showActual={this.props.showActual}
-                actual={this.props.actualList[i]}
-                series={this.props.seriesList[i]}
-                selectedDates={this.props.selectedDates}
-                indicatorThreshold={this.props.indicatorThreshold}
-                dateThreshold={this.props.dateThreshold}
-                runDate={this.props.runDate}
-                brushActive={this.props.brushActive}
-                width={graphWidth}
-                height={graphHeight}
-                showLegend={showLegend}
-                x={0}
-                y={0}
-                xScale={scales.xScale}
-                yScale={scales.yScale}
-            />
-        )
-        children.push(child);
-    }
-    this.setState({
-        scales,
-        graphWidth,
-        graphHeight,
-        children,
-    })
-}
-
-  getScales = (seriesList, selectedDates, width, height) => {
+const getScales = (seriesList, selectedDates, width, height) => {
     // calculate scale domains
     const timeDomain = extent(selectedDates);
-    let scaleMaxVal = 0
+    let scaleMaxVal = 0;
     for (let i = 0; i < seriesList.length; i++) {
         const seriesMaxVal = max(seriesList[i], sims => max(sims.vals));
-        if (seriesMaxVal > scaleMaxVal) scaleMaxVal = seriesMaxVal
+        if (seriesMaxVal > scaleMaxVal) 
+            scaleMaxVal = seriesMaxVal;
     }
     // set scale ranges to width and height of container
-    const xScale = scaleUtc().range([margin.left, width - margin.right])
-                            .domain(timeDomain);
-    const yScale = scaleLinear().range([height - margin.bottom, margin.top])
-                                .domain([0, scaleMaxVal]).nice();
+    const xScale = scaleUtc()
+        .range([margin.left, width - margin.right])
+        .domain(timeDomain);
+    const yScale = scaleLinear()
+        .range([height - margin.bottom, margin.top])
+        .domain([0, scaleMaxVal])
+        .nice();
+    return { xScale, yScale };
+}
 
-    return { xScale, yScale }
-  }
+const GraphContainer = ({ geoid, width, height, selectedDates, scenarioList, seriesList, indicator, severity, animateTransition, showConfBounds, confBoundsList, actualList, showActual, indicatorThreshold, dateThreshold, runDate, percExceedenceList, brushActive, scenarioClickCounter, scenarioHovered, statSliderActive, dateSliderActive, seriesMax }) => {
+    // const [ children, setChildren ] = useState([]);
 
-  render() {
-      const { children } = this.state;
-      const { geoid, scenarioList, scenarioHovered, width, indicator } = this.props;
-      const geoidName = `${GEOIDS[geoid]}`;
-      const dimensions = { width: margin.yAxis + margin.left, height: 40};
+    const updateGraphs = useCallback((graphWidth, graphHeight, scales) => {
+        const children = [];
+        if (scenarioList && scenarioList.length > 0) {
+            for (let i = 0; i < scenarioList.length; ++i) {
+                const showLegend = scenarioList.length === 1 || (scenarioList.length > 1 && i === 1);
+                const key = `${scenarioList[i].key}_Graph_${scenarioClickCounter}`;
+                const child = {
+                    key: key,
+                    graph: [],
+                }
+                child.graph.push(
+                    <Graph
+                        key={key}
+                        keyVal={key}
+                        indicator={indicator}
+                        geoid={geoid}
+                        scenario={scenarioList[i]}
+                        severity={severity}
+                        animateTransition={animateTransition}
+                        showConfBounds={showConfBounds}
+                        confBounds={confBoundsList[i]}
+                        showActual={showActual}
+                        actual={actualList[i]}
+                        series={seriesList[i]}
+                        selectedDates={selectedDates}
+                        indicatorThreshold={indicatorThreshold}
+                        dateThreshold={dateThreshold}
+                        runDate={runDate}
+                        brushActive={brushActive}
+                        width={graphWidth}
+                        height={graphHeight}
+                        showLegend={showLegend}
+                        x={0}
+                        y={0}
+                        xScale={scales.xScale}
+                        yScale={scales.yScale}/>
+                );
+                children.push(child);
+            }
+        }
+        return children;
+    }, [ scenarioList, scenarioClickCounter, indicator, geoid, severity, animateTransition, showConfBounds, confBoundsList, showActual, actualList, seriesList, selectedDates, indicatorThreshold, dateThreshold, runDate, brushActive ]);
 
-      return (
-          <div className="graph-wrapper">
-              <div className="y-axis-label titleNarrow graph-yLabel">
-                  {`Daily ${indicator.name}`}
-              </div>
-              <div className="graph-title-row">
+    let graphWidth = 0;
+    let scales;
+    if (seriesList && seriesList.length > 0) {
+        graphWidth = scenarioList.length == 2 ? width/2 : width;
+        scales = getScales(seriesList, selectedDates, width, height);
+    }
 
-              <div style={dimensions}></div>
-                {scenarioList.map((scenario, i) => {
-                    const scenarioTitle = formatTitle(scenario.name);
-                    const isActive = scenario.name === scenarioHovered ? ' title-active' : '';
-                    return (scenarioList && scenarioList.length > 1) ?
-                            <div key={scenario.key} style={{ width: width - margin.right}}>
-                                <div className={"scenario-title titleNarrow"}>{geoidName}</div>
-                                <div className={"scenario-title" + isActive}>{scenarioTitle}</div>
-                            </div>
-                         :
-                            <div key={scenario.key} style={{ width: width - margin.right}}>
-                                <div className="scenario-title titleNarrow">{geoidName}</div>
-                                <div className="scenario-title">{scenarioTitle}</div>
-                            </div>
-                } )}
+    const geoidName = `${GEOIDS[geoid]}`;
+    const dimensions = { 
+        width: margin.yAxis + margin.left, 
+        height: 40,
+    };
+
+    const children = updateGraphs(graphWidth, height, scales);
+
+    return (
+        <div className="graph-wrapper">
+            <div className="y-axis-label titleNarrow graph-yLabel">
+                {`Daily ${indicator.name}`}
             </div>
-              <div className="graph-title-row callout-row">
-                <div style={dimensions}></div>
-                    {children.map( (child, i) => {
+            <div className="graph-title-row">
+
+            <div style={dimensions}></div>
+            {scenarioList.map((scenario) => {
+                const scenarioTitle = formatTitle(scenario.name);
+                const isActive = scenario.name === scenarioHovered ? ' title-active' : '';
+                return (scenarioList && scenarioList.length > 1) ?
+                        <div key={scenario.key} style={{ width: width - margin.right}}>
+                            <div className={"scenario-title titleNarrow"}>{geoidName}</div>
+                            <div className={"scenario-title" + isActive}>{scenarioTitle}</div>
+                        </div>
+                        :
+                        <div key={scenario.key} style={{ width: width - margin.right}}>
+                            <div className="scenario-title titleNarrow">{geoidName}</div>
+                            <div className="scenario-title">{scenarioTitle}</div>
+                        </div>
+            } )}
+        </div>
+            <div className="graph-title-row callout-row">
+            <div style={dimensions}></div>
+                {children.map((child, i) => {
+                    return (
+                        scenarioList &&
+                        <ThresholdLabel
+                            key={`${child.key}-label`}
+                            classProps={'filter-label threshold-label callout'}
+                            indicatorThreshold={indicatorThreshold}
+                            seriesMax={seriesMax}
+                            dateThreshold={dateThreshold}
+                            percExceedence={percExceedenceList[i]}
+                            label={indicator.name.toLowerCase()}
+                            statSliderActive={statSliderActive}
+                            dateSliderActive={dateSliderActive} />
+                    );
+                })}
+            </div>
+            <div className="graph-container">
+                {scales &&
+                <Fragment>
+                    <svg
+                        width={margin.yAxis}
+                        height={height}
+                    >
+                    <Axis
+                        width={graphWidth}
+                        height={height}
+                        orientation={'left'}
+                        scale={scales.yScale}
+                        x={margin.yAxis}
+                        y={0}
+                    />
+                    </svg>
+                    {children.map(child => {
                         return (
-                            scenarioList &&
-                            <ThresholdLabel
-                                classProps={'filter-label threshold-label callout'}
-                                indicatorThreshold={this.props.indicatorThreshold}
-                                seriesMax={this.props.seriesMax}
-                                dateThreshold={this.props.dateThreshold}
-                                percExceedence={this.props.percExceedenceList[i]}
-                                label={indicator.name.toLowerCase()}
-                                statSliderActive={this.props.statSliderActive}
-                                dateSliderActive={this.props.dateSliderActive} />
+                            <svg
+                                key={`graphSVG_${child.key}`}
+                                width={graphWidth}
+                                height={height}
+                                className={`graphSVG_${child.key}`}
+                            >
+                            <g key={`${child.key}-graph`}>
+                                {child.graph}
+                            </g>
+                            </svg>
                         )
                     })}
-                </div>
-                <div className="graph-container">
-                  {this.state.scaleDomains &&
-                  <Fragment>
-                        <svg
-                            width={margin.yAxis}
-                            height={this.props.height}
-                        >
-                        <Axis
-                            width={this.state.graphWidth}
-                            height={this.props.height}
-                            orientation={'left'}
-                            scale={this.state.scales.yScale}
-                            x={margin.yAxis}
-                            y={0}
-                        />
-                        </svg>
-                        {children.map(child => {
-                            return (
-                                <svg
-                                    key={`graphSVG_${child.key}`}
-                                    width={this.state.graphWidth}
-                                    height={this.state.graphHeight}
-                                    className={`graphSVG_${child.key}`}
-                                >
-                                <g key={`${child.key}-graph`}>
-                                    {child.graph}
-                                </g>
-                                </svg>
-                            )
-                        })}
                 </Fragment>}
-                </div>
-          </div>
-      )
-  }
+            </div>
+        </div>
+    );
 }
+
+GraphContainer.propTypes = {
+    geoid: PropTypes.string.isRequired,
+    width: PropTypes.number.isRequired,
+    height: PropTypes.number.isRequired,
+    selectedDates: PropTypes.instanceOf(Date).isRequired,
+    scenarioList: PropTypes.array.isRequired,
+    seriesList: PropTypes.array.isRequired,
+    indicator: PropTypes.array.isRequired,
+    severity: PropTypes.string.isRequired,
+    r0full: PropTypes.array.isRequired,
+    r0selected: PropTypes.number.isRequired,
+    animateTransition: PropTypes.bool.isRequired,
+    showConfBounds: PropTypes.bool.isRequired,
+    confBoundsList: PropTypes.array.isRequired,
+    actualList: PropTypes.array.isRequired,
+    showActual: PropTypes.bool.isRequired,
+    indicatorThreshold: PropTypes.number.isRequired,
+    dateThreshold: PropTypes.instanceOf(Date).isRequired,
+    runDate: PropTypes.instanceOf(Date).isRequired,
+    percExceedenceList: PropTypes.array.isRequired,
+    brushActive: PropTypes.bool.isRequired,
+    scenarioClickCounter: PropTypes.number.isRequired,
+    scenarioHovered: PropTypes.bool.isRequired,
+    statSliderActive: PropTypes.bool.isRequired,
+    dateSliderActive: PropTypes.bool.isRequired,
+    seriesMax: PropTypes.number.isRequired,
+};
 
 export default GraphContainer;
