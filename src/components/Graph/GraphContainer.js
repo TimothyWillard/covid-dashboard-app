@@ -164,15 +164,12 @@ class GraphContainer extends Component {
                         return (
                             scenarioList &&
                             <ThresholdLabel
-                                key={`${child.key}-label`}
                                 classProps={'filter-label threshold-label callout'}
                                 indicatorThreshold={this.props.indicatorThreshold}
                                 seriesMax={this.props.seriesMax}
                                 dateThreshold={this.props.dateThreshold}
                                 percExceedence={this.props.percExceedenceList[i]}
                                 label={indicator.name.toLowerCase()}
-                                r0full={this.props.r0full}
-                                r0selected={this.props.r0selected}
                                 statSliderActive={this.props.statSliderActive}
                                 dateSliderActive={this.props.dateSliderActive} />
                         )
