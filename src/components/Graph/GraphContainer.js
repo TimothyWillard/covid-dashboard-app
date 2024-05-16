@@ -1,7 +1,7 @@
 import React, { Component, Fragment } from 'react';
 import Graph from '../Graph/Graph';
 import Axis from './Axis';
-import ThresholdLabel from '../Graph/ThresholdLabel.tsx';
+import ThresholdLabel from '../Graph/ThresholdLabel';
 import { scaleLinear, scaleUtc } from 'd3-scale';
 import { max, extent } from 'd3-array';
 import { formatTitle } from '../../utils/utils';

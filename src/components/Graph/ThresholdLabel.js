@@ -2,34 +2,10 @@ import React, { Component } from 'react';
 import { InfoCircleTwoTone } from '@ant-design/icons';
 import TooltipHandler from '../Filters/TooltipHandler';
 import { addCommas, getReadableDate, getStepValue } from '../../utils/utils';
-import { getClassForActiveState, LabelClassName, LabelClassNameEnum } from "../../utils/typeUtils";
+import { getClassForActiveState, LabelClassNameEnum } from "../../utils/typeUtils";
 
-
-interface Props {
-    percExceedence: number,
-    onConfClick: () => void,
-    indicatorThreshold: number,
-    dateThreshold: Date,
-    statSliderActive: boolean,
-    dateSliderActive: boolean,
-    classProps: string,
-    label: string,
-    seriesMax: number,
-}
-
-interface State {
-    showTooltip: boolean,
-    activeClass: LabelClassName,
-    statClass: LabelClassName,
-    dateClass: LabelClassName,
-    chance: number,
-    val: string,
-    date: string,
-}
-
-class ThresholdLabel extends Component<Props, State> {
-
-    constructor(props: Props) {
+class ThresholdLabel extends Component {
+    constructor(props) {
         super(props);
         this.state = {
             showTooltip: false,
@@ -42,32 +18,31 @@ class ThresholdLabel extends Component<Props, State> {
         }
     }
 
-    componentDidUpdate(prevProp: Props) {
+    componentDidUpdate(prevProps) {
         const { percExceedence, indicatorThreshold, dateThreshold, statSliderActive, dateSliderActive, seriesMax } = this.props;
 
-        if (percExceedence !== prevProp.percExceedence) {
-            this.setState({ chance: Math.round(100 * percExceedence) }
-        )}
-        if (indicatorThreshold !== prevProp.indicatorThreshold) {
-            const stepVal = getStepValue(seriesMax)
+        if (percExceedence !== prevProps.percExceedence) {
+            this.setState({ chance: Math.round(100 * percExceedence) });
+        }
+        if (indicatorThreshold !== prevProps.indicatorThreshold) {
+            const stepVal = getStepValue(seriesMax);
             const roundedStat = Math.ceil(indicatorThreshold / stepVal) * stepVal;
-            this.setState({ val: addCommas(roundedStat) }
-        )}
-        if (dateThreshold !== prevProp.dateThreshold) {
-            this.setState({ date: getReadableDate(dateThreshold) }
-        )}
-        if (statSliderActive !== prevProp.statSliderActive ||
-            dateSliderActive !== prevProp.dateSliderActive) {
+            this.setState({ val: addCommas(roundedStat) });
+        }
+        if (dateThreshold !== prevProps.dateThreshold) {
+            this.setState({ date: getReadableDate(dateThreshold) });
+        }
+        if (statSliderActive !== prevProps.statSliderActive || dateSliderActive !== prevProps.dateSliderActive) {
             this.setState({
                 activeClass: getClassForActiveState(statSliderActive || dateSliderActive),
                 statClass: getClassForActiveState(statSliderActive),
                 dateClass: getClassForActiveState(dateSliderActive),
-            }
-        )}
+            });
+        }
     }
 
     handleTooltipClick = () => {
-        this.setState({showTooltip: !this.state.showTooltip})
+        this.setState({ showTooltip: !this.state.showTooltip });
     }
 
     render() {
@@ -100,4 +75,4 @@ class ThresholdLabel extends Component<Props, State> {
     }
 }
 
-export default ThresholdLabel
+export default ThresholdLabel;
