@@ -173,13 +173,13 @@ GraphContainer.propTypes = {
     geoid: PropTypes.string.isRequired,
     width: PropTypes.number.isRequired,
     height: PropTypes.number.isRequired,
-    selectedDates: PropTypes.instanceOf(Date).isRequired,
+    selectedDates: PropTypes.array.isRequired,
     scenarioList: PropTypes.array.isRequired,
     seriesList: PropTypes.array.isRequired,
-    indicator: PropTypes.array.isRequired,
+    indicator: PropTypes.object.isRequired,
     severity: PropTypes.string.isRequired,
     r0full: PropTypes.array.isRequired,
-    r0selected: PropTypes.number.isRequired,
+    r0selected: PropTypes.array.isRequired,
     animateTransition: PropTypes.bool.isRequired,
     showConfBounds: PropTypes.bool.isRequired,
     confBoundsList: PropTypes.array.isRequired,
@@ -191,9 +191,9 @@ GraphContainer.propTypes = {
     percExceedenceList: PropTypes.array.isRequired,
     brushActive: PropTypes.bool.isRequired,
     scenarioClickCounter: PropTypes.number.isRequired,
-    scenarioHovered: PropTypes.bool.isRequired,
+    scenarioHovered: PropTypes.string.isRequired,
     statSliderActive: PropTypes.bool.isRequired,
-    dateSliderActive: PropTypes.bool.isRequired,
+    dateSliderActive: PropTypes.bool, // I think the isRequired attr can come back after MainGraph refactor
     seriesMax: PropTypes.number.isRequired,
 };
 

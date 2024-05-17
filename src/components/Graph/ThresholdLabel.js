@@ -57,7 +57,7 @@ ThresholdLabel.propTypes = {
     percExceedence: PropTypes.number.isRequired,
     label: PropTypes.string.isRequired,
     statSliderActive: PropTypes.bool.isRequired,
-    dateSliderActive: PropTypes.bool.isRequired,
+    dateSliderActive: PropTypes.bool, // See GraphContainer propTypes
 };
 
 export default ThresholdLabel;

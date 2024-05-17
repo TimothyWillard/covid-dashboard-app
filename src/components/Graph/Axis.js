@@ -103,7 +103,7 @@ const Axis = ({ scale, tickNum, orientation, view, width, x, y }) => {
 }
 
 Axis.propTypes = {
-  scale: PropTypes.object,
+  scale: PropTypes.func,
   tickNum: PropTypes.number,
   orientation: PropTypes.string,
   view: PropTypes.string,
