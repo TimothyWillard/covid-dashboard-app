@@ -1,517 +1,442 @@
-/* eslint-disable no-unused-vars */
-import React, { Component } from 'react'
-import { Tooltip } from 'antd'
-import Axis from './Axis'
-import Legend from './Legend'
-import { line, area, curveLinear } from 'd3-shape'
-import { bisectLeft, least, max, maxIndex } from 'd3-array'
-import { select } from 'd3-selection'
-import { easeCubicOut, easeCubicIn } from 'd3-ease'
-import { margin } from '../../utils/constants'
+import React, { useState, useEffect, useRef } from 'react';
+import { Tooltip } from 'antd';
+import Axis from './Axis';
+import Legend from './Legend';
+import { line, area, curveLinear } from 'd3-shape';
+import { bisectLeft, least, max, maxIndex } from 'd3-array';
+import { select } from 'd3-selection';
+import { easeCubicOut, easeCubicIn } from 'd3-ease';
+import { margin } from '../../utils/constants';
 import colors from '../../utils/colors';
 
-class Graph extends Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            width: this.props.width,
-            height: this.props.height,
-            series: this.props.series,
-            selectedDates: this.props.selectedDates,
-            indicatorThreshold: this.props.indicatorThreshold,
-            dateThreshold: this.props.dateThreshold,
-            xScale: this.props.xScale,
-            yScale: this.props.yScale,
-            lineGenerator: line().defined(d => !isNaN(d)),
-            simPaths: [],
-            hoveredSimPathId: null,
-            areaGenerator: area().curve(curveLinear),
-            confBounds: this.props.confBounds,
-            confBoundsAreaPath: [],
-            confBoundsMeanLinePath: [],
-            tooltipXPos: 0,
-            tooltipYPos: 0
-        };
-        
-        this.simPathsRef = React.createRef();
-        this.thresholdRef = React.createRef();
-        this.confBoundsRef = React.createRef();
-        this.actualRef = React.createRef();
-    }
-    
-    componentDidMount() {
-        const { series, selectedDates, confBounds, areaGenerator } = this.state;
-        this.drawSimPaths(series, selectedDates);
-        
-        if (confBounds && confBounds.length > 0) {
-            this.drawConfBounds(confBounds, areaGenerator, selectedDates)
-        };
-    }
+const Graph = (props) => {
+    const [state, setState] = useState({
+        width: props.width,
+        height: props.height,
+        series: props.series,
+        selectedDates: props.selectedDates,
+        indicatorThreshold: props.indicatorThreshold,
+        dateThreshold: props.dateThreshold,
+        xScale: props.xScale,
+        yScale: props.yScale,
+        lineGenerator: line().defined(d => !isNaN(d)),
+        simPaths: [],
+        hoveredSimPathId: null,
+        areaGenerator: area().curve(curveLinear),
+        confBounds: props.confBounds,
+        confBoundsAreaPath: [],
+        confBoundsMeanLinePath: [],
+        tooltipXPos: 0,
+        tooltipYPos: 0,
+        tooltipText: ''
+    });
 
-    componentDidUpdate(prevProps, prevState) {
-        const { confBounds, selectedDates, series, width, animateTransition } = this.props;
+    const simPathsRef = useRef();
+    const thresholdRef = useRef();
+    const confBoundsRef = useRef();
+    const actualRef = useRef();
 
-        // confidence bounds overlay
-        if (this.props.showConfBounds !== prevProps.showConfBounds && confBounds) {
-            if (confBounds) {
-                const { areaGenerator } = prevState;
-                this.updateConfBounds(confBounds, areaGenerator, selectedDates)};
+    useEffect(() => {
+        drawSimPaths(state.series, state.selectedDates);
+
+        if (state.confBounds && state.confBounds.length > 0) {
+            drawConfBounds(state.confBounds, state.areaGenerator, state.selectedDates);
         }
+    }, []);
 
-        if (series !== prevProps.series) {
-            const { lineGenerator, areaGenerator } = prevState;
-            this.updateSimPaths(series, selectedDates, lineGenerator, animateTransition, width);
-            if (confBounds && confBounds.length > 0) {
-                this.updateConfBounds(confBounds, areaGenerator, selectedDates)};
+    useEffect(() => {
+        if (props.series !== state.series || props.xScale !== state.xScale || props.yScale !== state.yScale) {
+            updateSimPaths(props.series, state.selectedDates, state.lineGenerator, props.animateTransition, props.width);
+            if (state.confBounds && state.confBounds.length > 0) {
+                updateConfBounds(state.confBounds, state.areaGenerator, state.selectedDates);
+            }
         }
+    }, [props]);
 
-        const { xScale, yScale } = this.props;
-        if (xScale !== prevProps.xScale || yScale !== prevProps.yScale) {
-            const { lineGenerator, areaGenerator } = prevState;
-            this.updateSimPaths(series, selectedDates, lineGenerator, animateTransition, width);
-            if (confBounds && confBounds.length > 0) {
-                this.updateConfBounds(confBounds, areaGenerator, selectedDates)};
-        }
-    }
+    const drawSimPaths = (series, selectedDates) => {
+        const { lineGenerator } = state;
+        const { xScale, yScale } = props;
 
-    drawSimPaths = (series, selectedDates) => {
-        const { lineGenerator } = this.state;
-        const { xScale, yScale } = this.props;
-        
-        // move this lineGenerator update in from calculateSimPaths
-        // and use scales passed in from GraphContainer
-        lineGenerator.x((d,i) => xScale(selectedDates[i]))
-        lineGenerator.y(d => yScale(d))
-        // generate simPaths from lineGenerator
-        const simPaths = series.map( (d) => {
-            return lineGenerator(d.vals)
-        })
-        // set new vals to state
-        this.setState({ 
-            series: series,
-            selectedDates: selectedDates,
-            xScale: xScale,
-            yScale: yScale,
-            lineGenerator: lineGenerator,
-            simPaths: simPaths,
-        })
-    }
+        lineGenerator.x((d, i) => xScale(selectedDates[i]));
+        lineGenerator.y(d => yScale(d));
 
-    removeSimPaths = (series, selectedDates) => {
-        const simPathsNode = select(this.simPathsRef.current)
-        simPathsNode.selectAll('.simPath').remove()
-        simPathsNode.selectAll('.simPath-hover').remove()
-        this.drawSimPaths(series, selectedDates)
-    }
+        const simPaths = series.map(d => lineGenerator(d.vals));
 
-    updateSimPaths = (series, selectedDates, lineGenerator, animateTransition, width) => {
-        // Animate simPath color but don't change data
-        if (this.simPathsRef.current) {
-            // update lineGenerator from new scale and data
-            lineGenerator.x((d,i) => this.props.xScale(selectedDates[i]))
-            lineGenerator.y(d => this.props.yScale(d))
-          
-            // generate simPaths from lineGenerator
-            const simPaths = series.map( (d) => {
-                return lineGenerator(d.vals)
-            })
+        setState(prevState => ({
+            ...prevState,
+            series,
+            selectedDates,
+            xScale,
+            yScale,
+            lineGenerator,
+            simPaths
+        }));
+    };
 
-            if (simPaths.length !== this.state.simPaths.length) {
-                // re-draw simPaths in render
-                this.drawSimPaths(series, selectedDates);
+    const removeSimPaths = (series, selectedDates) => {
+        const simPathsNode = select(simPathsRef.current);
+        simPathsNode.selectAll('.simPath').remove();
+        simPathsNode.selectAll('.simPath-hover').remove();
+        drawSimPaths(series, selectedDates);
+    };
+
+    const updateSimPaths = (series, selectedDates, lineGenerator, animateTransition, width) => {
+        if (simPathsRef.current) {
+            lineGenerator.x((d, i) => props.xScale(selectedDates[i]));
+            lineGenerator.y(d => props.yScale(d));
+
+            const simPaths = series.map(d => lineGenerator(d.vals));
+
+            if (simPaths.length !== state.simPaths.length) {
+                drawSimPaths(series, selectedDates);
             } else {
-                // update simPaths since same number
-                // get svg node
-                const simPathsNode = select(this.simPathsRef.current)
+                const simPathsNode = select(simPathsRef.current);
 
                 if (!animateTransition) {
                     const paths = simPathsNode.selectAll('.simPath')
                         .data(series)
-
-                    // paths.exit().remove()
-                    // paths.enter().append('path')
                         .attr("d", d => lineGenerator(d.vals))
-                        .attr("stroke", (d,i) => series[i].over ? colors.red : colors.green )
+                        .attr("stroke", (d, i) => series[i].over ? colors.red : colors.green)
                         .on("end", () => {
-                            // set new vals to state
-                            this.setState({ 
-                                series: series,
-                                selectedDates: selectedDates,
-                                xScale: this.props.xScale,
-                                yScale: this.props.yScale,
-                                lineGenerator: lineGenerator,
-                                simPaths: simPaths,
-                                width: width
-                            })
-                        })
-                        const hoverPaths = simPathsNode.selectAll('.simPath-hover')
-                                .data(series)
-                        // hoverPaths.exit().remove()
-                        // hoverPaths.enter().append('path')
-                            .attr("d", d => lineGenerator(d.vals))
+                            setState(prevState => ({
+                                ...prevState,
+                                series,
+                                selectedDates,
+                                xScale: props.xScale,
+                                yScale: props.yScale,
+                                lineGenerator,
+                                simPaths,
+                                width
+                            }));
+                        });
+                    simPathsNode.selectAll('.simPath-hover')
+                        .data(series)
+                        .attr("d", d => lineGenerator(d.vals));
                 } else {
                     const paths = simPathsNode.selectAll('.simPath')
                         .data(series)
-                    // paths.exit().remove()
-                    // paths.enter().append('path')
                         .transition()
                         .duration(300)
                         .ease(easeCubicIn)
-                            .attr('stroke-opacity', 0)
+                        .attr('stroke-opacity', 0)
                         .transition()
                         .duration(10)
-                            .attr("d", d => lineGenerator(d.vals))
+                        .attr("d", d => lineGenerator(d.vals))
                         .transition()
                         .duration(400)
                         .ease(easeCubicOut)
-                            .attr("stroke", (d,i) => series[i].over ? colors.red : colors.green )
-                            .attr("stroke-opacity", 0.6)
+                        .attr("stroke", (d, i) => series[i].over ? colors.red : colors.green)
+                        .attr("stroke-opacity", 0.6)
                         .on("end", () => {
-                            // set new vals to state
-                            this.setState({ 
-                                series: series,
-                                selectedDates: selectedDates,
-                                xScale: this.props.xScale,
-                                yScale: this.props.yScale,
-                                lineGenerator: lineGenerator,
-                                simPaths: simPaths,
+                            setState(prevState => ({
+                                ...prevState,
+                                series,
+                                selectedDates,
+                                xScale: props.xScale,
+                                yScale: props.yScale,
+                                lineGenerator,
+                                simPaths,
                                 width
-                            })
-                        })
-                        simPathsNode.selectAll('.simPath-hover')
-                            .data(series)
-                            .attr("d", d => lineGenerator(d.vals))
-                } 
+                            }));
+                        });
+                    simPathsNode.selectAll('.simPath-hover')
+                        .data(series)
+                        .attr("d", d => lineGenerator(d.vals));
+                }
             }
         }
-    }
+    };
 
-    drawConfBounds = (confBounds, areaGenerator, selectedDates) => {
-        // update areaGenerator from scale and data
+    const drawConfBounds = (confBounds, areaGenerator, selectedDates) => {
         if (selectedDates) {
             areaGenerator
-                .x((d,i) => this.props.xScale(selectedDates[i]))
-                .y0(d => this.props.yScale(d.p10)) // this gets the p10 values
-                .y1(d => this.props.yScale(d.p90)) // this gets the p90 values
+                .x((d, i) => props.xScale(selectedDates[i]))
+                .y0(d => props.yScale(d.p10))
+                .y1(d => props.yScale(d.p90));
 
-            // generate areaPath for confBounds from areaGenerator
-            const confBoundsAreaPath = areaGenerator(confBounds)
+            const confBoundsAreaPath = areaGenerator(confBounds);
 
-            // generate mean line path for confBounds from a confBoundsLineGenerator
             const confBoundsLineGenerator = line()
-                .x((d,i) => this.props.xScale(selectedDates[i]))
-                .y(d => this.props.yScale(d.p50))
-            const confBoundsMeanLinePath = confBoundsLineGenerator(confBounds)
+                .x((d, i) => props.xScale(selectedDates[i]))
+                .y(d => props.yScale(d.p50));
+            const confBoundsMeanLinePath = confBoundsLineGenerator(confBounds);
 
-            // save new values to state (possibly duplicate from simPaths update)
-            this.setState({
+            setState(prevState => ({
+                ...prevState,
                 selectedDates,
-                xScale: this.props.xScale,
-                yScale: this.props.yScale,
+                xScale: props.xScale,
+                yScale: props.yScale,
                 areaGenerator,
                 confBoundsAreaPath,
                 confBoundsMeanLinePath
-            })
-        } 
-    }
-
-    updateConfBounds = (confBounds, areaGenerator, selectedDates) => {  
-        
-        if (this.confBoundsRef.current) {
-            // update areaGenerator from scale and data
-            areaGenerator
-            .x((d,i) => this.props.xScale(selectedDates[i]))
-            .y0(d => this.props.yScale(d.p10)) // this gets the p10 values
-            .y1(d => this.props.yScale(d.p90)) // this gets the p90 values
-
-            // generate areaPath for confBounds from areaGenerator
-            const confBoundsAreaPath = areaGenerator(confBounds)
-
-            // generate mean line path for confBounds from a confBoundsLineGenerator
-            const confBoundsLineGenerator = line()
-                .x((d,i) => this.props.xScale(selectedDates[i]))
-                .y(d => this.props.yScale(d.p50))
-            const confBoundsMeanLinePath = confBoundsLineGenerator(confBounds)
-
-            // update paths with new data
-            const confBoundsNode = select(this.confBoundsRef.current)
-            confBoundsNode.selectAll('.confBoundsArea')
-                .attr("d", confBoundsAreaPath)
-            confBoundsNode.selectAll('.confBoundsMean')
-                .attr("d", confBoundsMeanLinePath)
-
-            // save new values to state (possibly duplicate from simPaths update)
-            this.setState({
-                selectedDates,
-                xScale: this.props.xScale,
-                yScale: this.props.yScale,
-                areaGenerator,
-                confBoundsAreaPath,
-                confBoundsMeanLinePath
-            })
+            }));
         }
-    }
+    };
 
-    handleMouseMove = (event, index) => {
-        if (this.props.showConfBounds) return
-        this.setState({ hoveredSimPathId: index })
-    }
+    const updateConfBounds = (confBounds, areaGenerator, selectedDates) => {
+        if (confBoundsRef.current) {
+            areaGenerator
+                .x((d, i) => props.xScale(selectedDates[i]))
+                .y0(d => props.yScale(d.p10))
+                .y1(d => props.yScale(d.p90));
 
-    handleMouseEnter = (event, index) => {
-        if (this.props.showConfBounds) return
-        this.setState({ hoveredSimPathId: index })
-    }
+            const confBoundsAreaPath = areaGenerator(confBounds);
 
-    handleMouseLeave = () => {
-        this.setState({ hoveredSimPathId: null })
-    }
+            const confBoundsLineGenerator = line()
+                .x((d, i) => props.xScale(selectedDates[i]))
+                .y(d => props.yScale(d.p50));
+            const confBoundsMeanLinePath = confBoundsLineGenerator(confBounds);
 
-    handleBetterSimMouseHover = (event) => {
-        if (this.props.showConfBounds) return
+            const confBoundsNode = select(confBoundsRef.current);
+            confBoundsNode.selectAll('.confBoundsArea')
+                .attr("d", confBoundsAreaPath);
+            confBoundsNode.selectAll('.confBoundsMean')
+                .attr("d", confBoundsMeanLinePath);
+
+            setState(prevState => ({
+                ...prevState,
+                selectedDates,
+                xScale: props.xScale,
+                yScale: props.yScale,
+                areaGenerator,
+                confBoundsAreaPath,
+                confBoundsMeanLinePath
+            }));
+        }
+    };
+
+    const handleMouseMove = (event, index) => {
+        if (props.showConfBounds) return;
+        setState(prevState => ({ ...prevState, hoveredSimPathId: index }));
+    };
+
+    const handleMouseEnter = (event, index) => {
+        if (props.showConfBounds) return;
+        setState(prevState => ({ ...prevState, hoveredSimPathId: index }));
+    };
+
+    const handleMouseLeave = () => {
+        setState(prevState => ({ ...prevState, hoveredSimPathId: null }));
+    };
+
+    const handleBetterSimMouseHover = (event) => {
+        if (props.showConfBounds) return;
         event.preventDefault();
-        const selector = `.graphSVG_${this.props.keyVal}`
-        const node = document.querySelector(selector)
+        const selector = `.graphSVG_${props.keyVal}`;
+        const node = document.querySelector(selector);
         let point = node.createSVGPoint();
         point.x = event.clientX;
         point.y = event.clientY;
         point = point.matrixTransform(node.getScreenCTM().inverse());
-        const xm = this.props.xScale.invert(point.x);
-        const ym = this.props.yScale.invert(point.y);
-        const i1 = bisectLeft(this.props.selectedDates, xm, 1);
+        const xm = props.xScale.invert(point.x);
+        const ym = props.yScale.invert(point.y);
+        const i1 = bisectLeft(props.selectedDates, xm, 1);
         const i0 = i1 - 1;
-        const i = xm - this.props.selectedDates[i0] > this.props.selectedDates[i1] - xm ? i1 : i0;
-        const s = least(this.props.series, d => Math.abs(d.vals[i] - ym));
+        const i = xm - props.selectedDates[i0] > props.selectedDates[i1] - xm ? i1 : i0;
+        const s = least(props.series, d => Math.abs(d.vals[i] - ym));
         if (s) {
-            const hoveredIdx = this.props.series.findIndex( sim => sim.name === s.name)
-            // we also want to find highest point of sim
-            const peak = max(s.vals)
-            const peakIndex = maxIndex(s.vals)
-            const tooltipXPos = this.props.xScale(this.props.selectedDates[peakIndex])
-            const tooltipYPos = this.props.yScale(peak)
-            this.setState({ 
-                hoveredSimPathId: hoveredIdx, 
-                tooltipText: `R0: ${s.r0.toFixed(1)}`, 
-                tooltipXPos, tooltipYPos })
-        } 
-    }
+            const hoveredIdx = props.series.findIndex(sim => sim.name === s.name);
+            const peak = max(s.vals);
+            const peakIndex = maxIndex(s.vals);
+            const tooltipXPos = props.xScale(props.selectedDates[peakIndex]);
+            const tooltipYPos = props.yScale(peak);
+            setState(prevState => ({
+                ...prevState,
+                hoveredSimPathId: hoveredIdx,
+                tooltipText: `R0: ${s.r0.toFixed(1)}`,
+                tooltipXPos,
+                tooltipYPos
+            }));
+        }
+    };
 
-    render() {
-        return (
-            // <div className="graph-area">
-                <g 
-                    width={this.props.width} 
-                    height={this.props.height}
-                    transform={`translate(${this.props.x}, ${this.props.y})`}
-                    ref={this.simPathsRef}
+    return (
+        <g 
+            width={props.width} 
+            height={props.height}
+            transform={`translate(${props.x}, ${props.y})`}
+            ref={simPathsRef}
+        >
+            <g> 
+                <rect 
+                    x={margin.left}
+                    y={margin.top}
+                    className={`graphArea`}
+                    id={`graphArea_${props.keyVal}`}
+                    width={props.width - margin.left - margin.right}
+                    height={props.height - margin.bottom - margin.top}
+                    fill={colors.graphBkgd}
+                    onMouseMove={handleBetterSimMouseHover}
+                    onMouseLeave={handleMouseLeave}
+                />
+                {state.simPaths.map((simPath, i) => (
+                    <path
+                        d={simPath}
+                        key={`simPath-${i}`}
+                        id={`simPath-${i}`}
+                        className={`simPath`}
+                        fill='none' 
+                        stroke={state.series[i].over ? colors.red : colors.green}
+                        strokeWidth={'1'}
+                        strokeOpacity={state.hoveredSimPathId || (props.showConfBounds && props.confBounds) ? 0 : 0.6}
+                        onMouseMove={(e) => handleMouseMove(e, i)}
+                        onMouseEnter={(e) => handleMouseEnter(e, i)}
+                        onMouseLeave={handleMouseLeave}
+                    />
+                ))}
+                {state.simPaths.map((simPath, i) => {
+                    const simIsHovered = (i === state.hoveredSimPathId);
+                    return (
+                        <path
+                            d={simPath}
+                            key={`simPath-${i}-hover`}
+                            id={`simPath-${i}-hover`}
+                            className={`simPath-hover`}
+                            fill='none' 
+                            stroke={simIsHovered ? colors.blue : colors.lightGray}
+                            strokeWidth={simIsHovered ? '2' : '1'}
+                            strokeOpacity={state.hoveredSimPathId || (props.showConfBounds && props.confBounds) ? 1 : 0}
+                            onMouseMove={(e) => handleMouseMove(e, i)}
+                            onMouseEnter={(e) => handleMouseEnter(e, i)}
+                            onMouseLeave={handleMouseLeave}
+                        />
+                    );
+                })}
+                <Tooltip
+                    key={`sim-tooltip`}
+                    title={state.tooltipText}
+                    open={state.hoveredSimPathId ? true : false}
+                    data-html="true"
                 >
-                    <g> 
-                        { // debug graph red outline
-                        /* <rect
-                            x={0}
-                            y={0}
-                            width={this.props.width}
-                            height={this.props.height}
-                            fillOpacity={0}
-                            stroke={'#ff0000'}
-                            strokeWidth='2'
-                        /> */}
-                        <rect 
-                            x={margin.left}
-                            y={margin.top}
-                            className={`graphArea`}
-                            id={`graphArea_${this.props.keyVal}`}
-                            width={this.props.width - margin.left - margin.right}
-                            height={this.props.height - margin.bottom - margin.top}
-                            fill={colors.graphBkgd}
-                            onMouseMove={(e) => this.handleBetterSimMouseHover(e)}
-                            onMouseLeave={(e, i) => this.handleMouseLeave(e, i)}
-                        />
-                        {
-                        // visible simPaths
-                        this.state.simPaths.map( (simPath, i) => {
-                            /* const simIsHovered = (i === this.state.hoveredSimPathId) */
-                            return (
-                                <path
-                                    d={simPath}
-                                    key={`simPath-${i}`}
-                                    id={`simPath-${i}`}
-                                    className={`simPath`}
-                                    fill='none' 
-                                    stroke = { this.state.series[i].over ? colors.red : colors.green}
-                                    strokeWidth={'1'}
-                                    strokeOpacity={ this.state.hoveredSimPathId || (this.props.showConfBounds && this.props.confBounds) ? 0 : 0.6}
-                                    onMouseMove={(e) => this.handleMouseMove(e, i)}
-                                    onMouseEnter={(e) => this.handleMouseEnter(e, i)}
-                                    onMouseLeave={(e) => this.handleMouseLeave(e, i)}
-                                />
-                            ) 
-                        })}
-                        {// highlight simPaths
-                        this.state.simPaths.map( (simPath, i) => {
-                            const simIsHovered = (i === this.state.hoveredSimPathId)
-                            return <path
-                                d={simPath}
-                                key={`simPath-${i}-hover`}
-                                id={`simPath-${i}-hover`}
-                                className={`simPath-hover`}
-                                fill='none' 
-                                stroke={simIsHovered ? colors.blue : colors.lightGray}
-                                strokeWidth={simIsHovered ? '2' : '1'}
-                                strokeOpacity={this.state.hoveredSimPathId || (this.props.showConfBounds && this.props.confBounds) ? 1 : 0}
-                                onMouseMove={(e) => this.handleMouseMove(e, i)}
-                                onMouseEnter={(e) => this.handleMouseEnter(e, i)}
-                                onMouseLeave={(e) => this.handleMouseLeave(e, i)}
-                            />
-                        })}
-                        <Tooltip
-                            key={`sim-tooltip`}
-                            title={this.state.tooltipText}
-                            open={this.state.hoveredSimPathId ? true : false}
-                            // visible={true}
-                            // align={{
-                            //     points: ['bc', 'tc'],        // align top left point of sourceNode with top right point of targetNode
-                            //     offset: [10, 20],            // the offset sourceNode by 10px in x and 20px in y,
-                            //     targetOffset: ['0%','0%'], // the offset targetNode by 30% of targetNode width in x and 40% of targetNode height in y,
-                            //     overflow: { adjustX: true, adjustY: true }, // auto adjust position when sourceNode is overflowed
-                            //   }}
-                            data-html="true"
-                        >
-                            <circle
-                                cx={this.state.tooltipXPos}
-                                cy={this.state.tooltipYPos}
-                                r={2}
-                                fill={colors.gray}
-                                fillOpacity={0}
-                                className={'tooltipCircle'}
-                            ></circle>
-                        </Tooltip>
-                        <line
-                            x1={this.props.xScale(this.props.runDate) < margin.left ? -margin.left : this.props.xScale(this.props.runDate)}
-                            y1={margin.top}
-                            x2={this.props.xScale(this.props.runDate) < margin.left ? -margin.left : this.props.xScale(this.props.runDate)}
-                            y2={this.props.height - margin.bottom}
-                            stroke={colors.blue}
-                            strokeOpacity={0.8}
-                            className={'runDate'}
-                        ></line>
-                    </g>
-                    {(this.props.showConfBounds && this.props.confBounds) &&
-                    <g ref={this.confBoundsRef}>
-                        <clipPath 
-                            id={'confClip'}
-                        >
-                            <rect 
-                                x={margin.left}
-                                y={margin.top}
-                                width={this.props.width - margin.left - margin.right}
-                                height={this.props.height - margin.bottom - margin.top}
-                                fill={'pink'}
-                                fillOpacity={0.5}
-                            ></rect>
-                        </clipPath>
-                        <path
-                            className={'confBoundsArea'}
-                            d={this.state.confBoundsAreaPath}
-                            fill={colors.green}
-                            fillOpacity={0.3}
-                            clipPath={'url(#confClip)'}
-                        ></path>
-                        <path
-                            className={'confBoundsMean'}
-                            d={this.state.confBoundsMeanLinePath}
-                            stroke={colors.green}
-                            strokeWidth={2}
-                            fillOpacity={0}
-                            clipPath={'url(#confClip)'}
-                        ></path>
-                    </g>
-                    }
-                    {(this.props.showActual && this.props.actual) &&
-                    <g ref={this.actualRef}>
-                        <clipPath 
-                            id={'actualClip'}
-                        >
-                            <rect 
-                                x={margin.left}
-                                y={margin.top}
-                                width={this.props.width - margin.left - margin.right}
-                                height={this.props.height - margin.bottom - margin.top}
-                                fill={'pink'}
-                                fillOpacity={0.5}
-                            ></rect>
-                        </clipPath>
-                        {this.props.actual.map( (d, i) => {
-                            return (
-                                <circle
-                                    key={`actual-data-${i}-circle`}
-                                    cx={this.props.xScale(d.date)}
-                                    cy={this.props.yScale(d.val)}
-                                    r={1.5}
-                                    // height={this.props.height - this.props.yScale(d.val)}
-                                    fill={colors.actual}
-                                    clipPath={'url(#actualClip)'}
-                                    className={'actualDataCircle'}
-                                >
-                                </circle>
-                            )
-                        })}
-                    </g>
-                    }
-                    {!this.props.showConfBounds &&
-                    <g ref={this.thresholdRef}>
-                        <line
-                            x1={margin.left}
-                            y1={this.props.yScale(this.props.indicatorThreshold) < margin.top ? margin.top : this.props.yScale(this.props.indicatorThreshold)}
-                            x2={this.props.width - margin.right}
-                            y2={this.props.yScale(this.props.indicatorThreshold) < margin.top ? margin.top : this.props.yScale(this.props.indicatorThreshold)}
-                            stroke={colors.gray}
-                            className={'indicatorThreshold'}
-                            strokeDasharray="4 2"
-                        ></line>
-                        <line
-                            x1={this.props.xScale(this.props.dateThreshold) < margin.left ? margin.left : this.props.xScale(this.props.dateThreshold)}
-                            y1={margin.top}
-                            x2={this.props.xScale(this.props.dateThreshold) < margin.left ? margin.left : this.props.xScale(this.props.dateThreshold)}
-                            y2={this.props.height - margin.bottom}
-                            stroke={colors.gray}
-                            className={'dateThreshold'}
-                            strokeDasharray="4 2"
-                        ></line>
-                        <circle
-                            cx={this.props.xScale(this.props.dateThreshold)}
-                            cy={this.props.yScale(this.props.indicatorThreshold)}
-                            r={4}
-                            fill={colors.gray}
-                            className={'thresholdCircle'}
-                        ></circle>
-                    </g>
-                    }
-                    {
-                        this.props.showLegend &&
-                        <Legend 
-                            showConfBounds={this.props.showConfBounds}
-                            showHoveredSim={this.state.hoveredSimPathId}
-                            showActual={this.props.showActual}
-                            x={this.props.width - margin.right - 160}
-                            y={margin.top * 2.3}
-                        />
-                    }
-                    <g>
-                        <Axis 
-                            keyVal={this.props.keyVal}
-                            width={this.props.width - margin.left}
-                            height={this.props.height}
-                            orientation={'bottom'}
-                            view={'graph'}
-                            scale={this.props.xScale}
-                            x={0}
-                            y={this.props.height - margin.bottom}
-                        />
-                    </g>
-                </g>
-            // </div>
-        )
-    }
-}
+                    <circle
+                        cx={state.tooltipXPos}
+                        cy={state.tooltipYPos}
+                        r={2}
+                        fill={colors.gray}
+                        fillOpacity={0}
+                        className={'tooltipCircle'}
+                    />
+                </Tooltip>
+                <line
+                    x1={props.xScale(props.runDate) < margin.left ? -margin.left : props.xScale(props.runDate)}
+                    y1={margin.top}
+                    x2={props.xScale(props.runDate) < margin.left ? -margin.left : props.xScale(props.runDate)}
+                    y2={props.height - margin.bottom}
+                    stroke={colors.blue}
+                    strokeOpacity={0.8}
+                    className={'runDate'}
+                />
+            </g>
+            {(props.showConfBounds && props.confBounds) &&
+            <g ref={confBoundsRef}>
+                <clipPath 
+                    id={'confClip'}
+                >
+                    <rect 
+                        x={margin.left}
+                        y={margin.top}
+                        width={props.width - margin.left - margin.right}
+                        height={props.height - margin.bottom - margin.top}
+                        fill={'pink'}
+                        fillOpacity={0.5}
+                    />
+                </clipPath>
+                <path
+                    className={'confBoundsArea'}
+                    d={state.confBoundsAreaPath}
+                    fill={colors.green}
+                    fillOpacity={0.3}
+                    clipPath={'url(#confClip)'}
+                />
+                <path
+                    className={'confBoundsMean'}
+                    d={state.confBoundsMeanLinePath}
+                    stroke={colors.green}
+                    strokeWidth={2}
+                    fillOpacity={0}
+                    clipPath={'url(#confClip)'}
+                />
+            </g>
+            }
+            {(props.showActual && props.actual) &&
+            <g ref={actualRef}>
+                <clipPath 
+                    id={'actualClip'}
+                >
+                    <rect 
+                        x={margin.left}
+                        y={margin.top}
+                        width={props.width - margin.left - margin.right}
+                        height={props.height - margin.bottom - margin.top}
+                        fill={'pink'}
+                        fillOpacity={0.5}
+                    />
+                </clipPath>
+                {props.actual.map((d, i) => (
+                    <circle
+                        key={`actual-data-${i}-circle`}
+                        cx={props.xScale(d.date)}
+                        cy={props.yScale(d.val)}
+                        r={1.5}
+                        fill={colors.actual}
+                        clipPath={'url(#actualClip)'}
+                        className={'actualDataCircle'}
+                    />
+                ))}
+            </g>
+            }
+            {!props.showConfBounds &&
+            <g ref={thresholdRef}>
+                <line
+                    x1={margin.left}
+                    y1={props.yScale(props.indicatorThreshold) < margin.top ? margin.top : props.yScale(props.indicatorThreshold)}
+                    x2={props.width - margin.right}
+                    y2={props.yScale(props.indicatorThreshold) < margin.top ? margin.top : props.yScale(props.indicatorThreshold)}
+                    stroke={colors.gray}
+                    className={'indicatorThreshold'}
+                    strokeDasharray="4 2"
+                />
+                <line
+                    x1={props.xScale(props.dateThreshold) < margin.left ? margin.left : props.xScale(props.dateThreshold)}
+                    y1={margin.top}
+                    x2={props.xScale(props.dateThreshold) < margin.left ? margin.left : props.xScale(props.dateThreshold)}
+                    y2={props.height - margin.bottom}
+                    stroke={colors.gray}
+                    className={'dateThreshold'}
+                    strokeDasharray="4 2"
+                />
+                <circle
+                    cx={props.xScale(props.dateThreshold)}
+                    cy={props.yScale(props.indicatorThreshold)}
+                    r={4}
+                    fill={colors.gray}
+                    className={'thresholdCircle'}
+                />
+            </g>
+            }
+            {props.showLegend &&
+            <Legend 
+                showConfBounds={props.showConfBounds}
+                showHoveredSim={state.hoveredSimPathId}
+                showActual={props.showActual}
+                x={props.width - margin.right - 160}
+                y={margin.top * 2.3}
+            />
+            }
+            <g>
+                <Axis 
+                    keyVal={props.keyVal}
+                    width={props.width - margin.left}
+                    height={props.height}
+                    orientation={'bottom'}
+                    view={'graph'}
+                    scale={props.xScale}
+                    x={0}
+                    y={props.height - margin.bottom}
+                />
+            </g>
+        </g>
+    );
+};
 
-export default Graph
+export default Graph;
