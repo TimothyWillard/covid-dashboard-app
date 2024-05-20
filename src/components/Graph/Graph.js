@@ -1,11 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Tooltip } from 'antd';
-import Axis from './Axis';
-import Legend from './Legend';
+import PropTypes from 'prop-types';
 import { line, area, curveLinear } from 'd3-shape';
 import { bisectLeft, least, max, maxIndex } from 'd3-array';
 import { select } from 'd3-selection';
 import { easeCubicOut, easeCubicIn } from 'd3-ease';
+
+import Axis from './Axis';
+import Legend from './Legend';
+
 import { margin } from '../../utils/constants';
 import colors from '../../utils/colors';
 
@@ -36,24 +39,7 @@ const Graph = (props) => {
     const confBoundsRef = useRef();
     const actualRef = useRef();
 
-    useEffect(() => {
-        drawSimPaths(state.series, state.selectedDates);
-
-        if (state.confBounds && state.confBounds.length > 0) {
-            drawConfBounds(state.confBounds, state.areaGenerator, state.selectedDates);
-        }
-    }, []);
-
-    useEffect(() => {
-        if (props.series !== state.series || props.xScale !== state.xScale || props.yScale !== state.yScale) {
-            updateSimPaths(props.series, state.selectedDates, state.lineGenerator, props.animateTransition, props.width);
-            if (state.confBounds && state.confBounds.length > 0) {
-                updateConfBounds(state.confBounds, state.areaGenerator, state.selectedDates);
-            }
-        }
-    }, [props]);
-
-    const drawSimPaths = (series, selectedDates) => {
+    const drawSimPaths = useCallback((series, selectedDates) => {
         const { lineGenerator } = state;
         const { xScale, yScale } = props;
 
@@ -71,16 +57,9 @@ const Graph = (props) => {
             lineGenerator,
             simPaths
         }));
-    };
+    }, [ props, state ]);
 
-    const removeSimPaths = (series, selectedDates) => {
-        const simPathsNode = select(simPathsRef.current);
-        simPathsNode.selectAll('.simPath').remove();
-        simPathsNode.selectAll('.simPath-hover').remove();
-        drawSimPaths(series, selectedDates);
-    };
-
-    const updateSimPaths = (series, selectedDates, lineGenerator, animateTransition, width) => {
+    const updateSimPaths = useCallback((series, selectedDates, lineGenerator, animateTransition, width) => {
         if (simPathsRef.current) {
             lineGenerator.x((d, i) => props.xScale(selectedDates[i]));
             lineGenerator.y(d => props.yScale(d));
@@ -93,7 +72,7 @@ const Graph = (props) => {
                 const simPathsNode = select(simPathsRef.current);
 
                 if (!animateTransition) {
-                    const paths = simPathsNode.selectAll('.simPath')
+                    simPathsNode.selectAll('.simPath')
                         .data(series)
                         .attr("d", d => lineGenerator(d.vals))
                         .attr("stroke", (d, i) => series[i].over ? colors.red : colors.green)
@@ -113,7 +92,7 @@ const Graph = (props) => {
                         .data(series)
                         .attr("d", d => lineGenerator(d.vals));
                 } else {
-                    const paths = simPathsNode.selectAll('.simPath')
+                    simPathsNode.selectAll('.simPath')
                         .data(series)
                         .transition()
                         .duration(300)
@@ -145,9 +124,9 @@ const Graph = (props) => {
                 }
             }
         }
-    };
+    }, [ props, state, drawSimPaths ]);
 
-    const drawConfBounds = (confBounds, areaGenerator, selectedDates) => {
+    const drawConfBounds = useCallback((confBounds, areaGenerator, selectedDates) => {
         if (selectedDates) {
             areaGenerator
                 .x((d, i) => props.xScale(selectedDates[i]))
@@ -171,9 +150,9 @@ const Graph = (props) => {
                 confBoundsMeanLinePath
             }));
         }
-    };
+    }, [ props ]);
 
-    const updateConfBounds = (confBounds, areaGenerator, selectedDates) => {
+    const updateConfBounds = useCallback((confBounds, areaGenerator, selectedDates) => {
         if (confBoundsRef.current) {
             areaGenerator
                 .x((d, i) => props.xScale(selectedDates[i]))
@@ -203,23 +182,23 @@ const Graph = (props) => {
                 confBoundsMeanLinePath
             }));
         }
-    };
+    }, [ props ]);
 
-    const handleMouseMove = (event, index) => {
+    const handleMouseMove = useCallback((event, index) => {
         if (props.showConfBounds) return;
         setState(prevState => ({ ...prevState, hoveredSimPathId: index }));
-    };
+    }, [ props ]);
 
-    const handleMouseEnter = (event, index) => {
+    const handleMouseEnter = useCallback((event, index) => {
         if (props.showConfBounds) return;
         setState(prevState => ({ ...prevState, hoveredSimPathId: index }));
-    };
+    }, [ props ]);
 
     const handleMouseLeave = () => {
         setState(prevState => ({ ...prevState, hoveredSimPathId: null }));
     };
 
-    const handleBetterSimMouseHover = (event) => {
+    const handleBetterSimMouseHover = useCallback((event) => {
         if (props.showConfBounds) return;
         event.preventDefault();
         const selector = `.graphSVG_${props.keyVal}`;
@@ -248,7 +227,23 @@ const Graph = (props) => {
                 tooltipYPos
             }));
         }
-    };
+    }, [ props ]);
+
+    useEffect(() => {
+        drawSimPaths(state.series, state.selectedDates);
+        if (state.confBounds && state.confBounds.length > 0) {
+            drawConfBounds(state.confBounds, state.areaGenerator, state.selectedDates);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (props.series !== state.series || props.xScale !== state.xScale || props.yScale !== state.yScale) {
+            updateSimPaths(props.series, state.selectedDates, state.lineGenerator, props.animateTransition, props.width);
+            if (state.confBounds && state.confBounds.length > 0) {
+                updateConfBounds(state.confBounds, state.areaGenerator, state.selectedDates);
+            }
+        }
+    }, [ props ]);
 
     return (
         <g 
@@ -437,6 +432,32 @@ const Graph = (props) => {
             </g>
         </g>
     );
+};
+
+Graph.propTypes = {
+    keyVal: PropTypes.string,
+    indicator: PropTypes.object,
+    geoid: PropTypes.string,
+    scenario: PropTypes.object,
+    severity: PropTypes.string,
+    animateTransition: PropTypes.bool,
+    showConfBounds: PropTypes.bool,
+    confBounds: PropTypes.array,
+    showActual: PropTypes.bool,
+    actual: PropTypes.array,
+    series: PropTypes.array,
+    selectedDates: PropTypes.array,
+    indicatorThreshold: PropTypes.number,
+    dateThreshold: PropTypes.instanceOf(Date),
+    runDate: PropTypes.instanceOf(Date),
+    brushActive: PropTypes.bool,
+    width: PropTypes.number,
+    height: PropTypes.number,
+    showLegend: PropTypes.bool,
+    x: PropTypes.number,
+    y: PropTypes.number,
+    xScale: PropTypes.func,
+    yScale: PropTypes.func,
 };
 
 export default Graph;
