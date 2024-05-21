@@ -2,38 +2,26 @@ import React, { Component } from 'react';
 import { Radio } from 'antd';
 import { InfoCircleTwoTone } from '@ant-design/icons';
 import { styles } from '../../utils/constants';
-import { RadioChangeEvent } from "antd/lib/radio";
 import TooltipHandler from '../Filters/TooltipHandler';
 
-export enum ScaleTypeEnum {
-    linear = 'linear',
-    power = 'power'
-}
+const ScaleTypeEnum = {
+    linear: 'linear',
+    power: 'power'
+};
 
-export type ScaleType = ScaleTypeEnum.linear | ScaleTypeEnum.power
-
-interface Props {
-    scale: ScaleType,
-    onScaleToggle: (scale: any) => void,
-}
-
-interface State {
-    showTooltip: boolean
-}
-
-class ScaleToggle extends Component<Props, State> {
-    constructor(props: Props) {
+class ScaleToggle extends Component {
+    constructor(props) {
         super(props);
         this.state = {
             showTooltip: false
-        }
+        };
     }
 
     handleTooltipClick = () => {
-        this.setState({showTooltip: !this.state.showTooltip})
+        this.setState({ showTooltip: !this.state.showTooltip });
     }
 
-    handleChange = (e: RadioChangeEvent) => {
+    handleChange = (e) => {
         this.props.onScaleToggle(e.target.value);
     };
 
@@ -44,14 +32,14 @@ class ScaleToggle extends Component<Props, State> {
                     <TooltipHandler
                         showTooltip={this.state.showTooltip}
                         onClick={this.handleTooltipClick}
-                        >
+                    >
                         <div className="tooltip">
                             &nbsp;<InfoCircleTwoTone />
                             {this.state.showTooltip &&
-                            <span className="tooltip-text">
-                            Toggle between a linear scale or a power scale, 
-                            which reveals more granularity at lower levels.
-                            </span> }
+                                <span className="tooltip-text">
+                                    Toggle between a linear scale or a power scale, 
+                                    which reveals more granularity at lower levels.
+                                </span>}
                         </div>
                     </TooltipHandler>
                 </div>
@@ -63,8 +51,8 @@ class ScaleToggle extends Component<Props, State> {
                     <Radio.Button value={ScaleTypeEnum.power}>Power</Radio.Button>
                 </Radio.Group>
             </div>
-        )
+        );
     }
 }
 
-export default ScaleToggle
+export default ScaleToggle;

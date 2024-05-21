@@ -4,7 +4,7 @@ import { PlusCircleTwoTone } from '@ant-design/icons';
 import ChartContainer from './ChartContainer';
 import Scenarios from '../Filters/Scenarios.tsx';
 import DatePicker from './DatePicker';
-import ScaleToggle from './ScaleToggle.tsx';
+import ScaleToggle from './ScaleToggle';
 import IndicatorSelection from './IndicatorSelection';
 import ViewModal from '../ViewModal.js';
 
