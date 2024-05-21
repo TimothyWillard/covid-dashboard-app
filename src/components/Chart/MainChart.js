@@ -3,7 +3,7 @@ import { Layout, Row, Col, Spin, Alert } from 'antd';
 import { PlusCircleTwoTone } from '@ant-design/icons';
 import ChartContainer from './ChartContainer';
 import Scenarios from '../Filters/Scenarios.tsx';
-import DatePicker from './DatePicker';
+import ChartRangePicker from './ChartRangePicker';
 import ScaleToggle from './ScaleToggle';
 import IndicatorSelection from './IndicatorSelection';
 import ViewModal from '../ViewModal.js';
@@ -215,7 +215,7 @@ class MainChart extends Component {
                                         onStatClickChart={this.handleStatClickChart}
                                     />
                                 </Fragment>
-                                <DatePicker 
+                                <ChartRangePicker 
                                     firstDate={this.state.dates[0]}
                                     start={this.state.start}
                                     end={this.state.end}
