@@ -1,30 +1,30 @@
 import React from 'react';
-import { gray, green } from '../../utils/colors';
 
-function ChartLegend(props) {
-   
+import { colors } from '../../utils/colors';
+
+const ChartLegend = () => {
         return (
             <div className="legend-container chart-legend-boxplot">
                 <p className="legend" style={{ marginRight: 0 }}>
                     <svg width="20" height="55">
                         <rect 
                             x="0" y="20" width="20" height="35"
-                            fill={green}
+                            fill={colors.green}
                             opacity={0.8}
                         />
                         <line
                             x1="5" y1="1" x2="15" y2="1"
-                            stroke={gray}
+                            stroke={colors.gray}
                             strokeWidth="1"
                         />
                         <line
                             x1="10" y1="0" x2="10" y2="40"
-                            stroke={gray}
+                            stroke={colors.gray}
                             strokeWidth="1"
                         />
                         <line
                             x1="5" y1="40" x2="15" y2="40"
-                            stroke={gray}
+                            stroke={colors.gray}
                             strokeWidth="1"
                         />
                     </svg>
@@ -33,21 +33,21 @@ function ChartLegend(props) {
                     <svg width="20" height="55">
                         <line
                             x1="4" y1="1" x2="20" y2="1"
-                            stroke={gray}
+                            stroke={colors.gray}
                             strokeWidth="1"
                             opacity={0.5}
                             strokeDasharray="4 2"
                         />
                         <line
                             x1="4" y1="20" x2="20" y2="20"
-                            stroke={gray}
+                            stroke={colors.gray}
                             strokeWidth="1"
                             opacity={0.5}
                             strokeDasharray="4 2"
                         />
                         <line
                             x1="4" y1="40" x2="20" y2="40"
-                            stroke={gray}
+                            stroke={colors.gray}
                             strokeWidth="1"
                             opacity={0.5}
                             strokeDasharray="4 2"
@@ -86,4 +86,4 @@ function ChartLegend(props) {
         )
 }
 
-export default ChartLegend
+export default ChartLegend;
