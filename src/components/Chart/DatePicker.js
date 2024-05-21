@@ -1,23 +1,22 @@
-import React, { Component } from 'react';
+import React, { useCallback, useState } from 'react';
 import { DatePicker } from 'antd';
 import { InfoCircleTwoTone } from '@ant-design/icons';
-import { styles } from '../../utils/constants';
+import PropTypes from 'prop-types';
+
 import TooltipHandler from '../Filters/TooltipHandler';
 
-class Chart extends Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            showTooltip: false
-        }
-    }
+import { styles } from '../../utils/constants';
 
-    handleTooltipClick = () => {
-        this.setState({showTooltip: !this.state.showTooltip})
-    }
+const { RangePicker } = DatePicker
 
-    handleChange = (dates) => {
+const ChartRangePicker = ({ firstDate, lastDate, onHandleSummaryDates, onHandleDatePicker }) => {
+    const [ showTooltip, setShowTooltip ] = useState(false);
 
+    const handleTooltipClick = useCallback(() => {
+        setShowTooltip(!showTooltip);
+    }, [ showTooltip ]);
+
+    const handleChange = useCallback((dates) => {
         let start;
         let end;
         if (dates) {
@@ -28,51 +27,50 @@ class Chart extends Component {
             end = new Date();
             end.setDate(end.getDate() - 14);
         }
+        onHandleSummaryDates(start, end);
+    }, [ onHandleSummaryDates ]);
 
-        this.props.onHandleSummaryDates(start, end);
-    }
-
-    disabledDate = (dateMoment) => {
+    const disabledDate = useCallback((dateMoment) => {
         // prevent user from selecting beyond modeled date range
         const date = dateMoment._d;
-        return date < this.props.firstDate || date > this.props.lastDate;
-    }
+        return date < firstDate || date > lastDate;
+    }, [ firstDate, lastDate ]);
 
-    handleOpen = (datePickerOpen) => {
-        this.props.onHandleDatePicker(datePickerOpen)
-    }
-    
-    render() {
-        const { RangePicker } = DatePicker;
-        // defautValue for DatePicker might be buggy.
-        // these values console out with the right defaults here
-        // but both render as the value for summaryEnd in the DatePicker
-        return (
-            <div>
-                <div className="param-header">DATE RANGE
-                    <TooltipHandler
-                        showTooltip={this.state.showTooltip}
-                        onClick={this.handleTooltipClick}
-                        >
-                        <div className="tooltip">
-                            &nbsp;<InfoCircleTwoTone />
-                            {this.state.showTooltip &&
-                            <span className="tooltip-text">
+    const handleOpen = useCallback((datePickerOpen) => {
+        onHandleDatePicker(datePickerOpen)
+    }, [ onHandleDatePicker ]);
+
+    return (
+        <div>
+            <div className="param-header">
+                DATE RANGE
+                <TooltipHandler
+                    showTooltip={showTooltip}
+                    onClick={handleTooltipClick}>
+                    <div className="tooltip">
+                        &nbsp;<InfoCircleTwoTone />
+                        {showTooltip &&
+                        <span className="tooltip-text">
                             Choose a date range across which to calculate and display aggregate statistics. 
-                            </span> }
-                        </div>
-                    </TooltipHandler>
-                </div>
-                <RangePicker
-                    disabledDate={this.disabledDate} 
-                    style={styles.Selector}
-                    // renderExtraFooter={() => "Select a summary period in weekly increments"}
-                    onChange={this.handleChange}
-                    onOpenChange={this.handleOpen}
-                />
+                        </span>}
+                    </div>
+                </TooltipHandler>
             </div>
-        );
-    }
-}
+            <RangePicker
+                disabledDate={disabledDate} 
+                style={styles.Selector}
+                // renderExtraFooter={() => "Select a summary period in weekly increments"}
+                onChange={handleChange}
+                onOpenChange={handleOpen}/>
+        </div>
+    );
+};
 
-export default Chart 
+ChartRangePicker.propTypes = {
+    firstDate: PropTypes.instanceOf(Date), 
+    lastDate: PropTypes.instanceOf(Date), 
+    onHandleSummaryDates: PropTypes.func.isRequired,
+    onHandleDatePicker: PropTypes.func.isRequired,
+};
+
+export default ChartRangePicker;
