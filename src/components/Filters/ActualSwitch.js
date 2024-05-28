@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 import { Row, Switch } from 'antd';
 import { InfoCircleTwoTone } from '@ant-design/icons';
+
 import TooltipHandler from './TooltipHandler';
 import { styles } from '../../utils/constants';
 
@@ -41,5 +43,11 @@ const ActualSwitch = ({ showActual, actualList, onChange }) => {
         </Row>
     );
 };
+
+ActualSwitch.propTypes = {
+    showActual: PropTypes.bool.isRequired,
+    actualList: PropTypes.array.isRequired,
+    onChange: PropTypes.func.isRequired,
+}
 
 export default ActualSwitch;
