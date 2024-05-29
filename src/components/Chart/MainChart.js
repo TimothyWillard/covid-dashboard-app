@@ -2,7 +2,7 @@ import React, { Component, Fragment } from 'react';
 import { Layout, Row, Col, Spin, Alert } from 'antd';
 import { PlusCircleTwoTone } from '@ant-design/icons';
 import ChartContainer from './ChartContainer';
-import Scenarios from '../Filters/Scenarios.tsx';
+import Scenarios from '../Filters/Scenarios';
 import ChartRangePicker from './ChartRangePicker';
 import ScaleToggle from './ScaleToggle';
 import IndicatorSelection from './IndicatorSelection';

@@ -2,7 +2,7 @@ import React, { Fragment, useEffect, useRef, useState } from 'react';
 import { Layout, Row, Col, Spin, Alert } from 'antd';
 import { PlusCircleTwoTone } from '@ant-design/icons';
 import MapContainer from './MapContainer';
-import Scenarios from '../Filters/Scenarios.tsx';
+import Scenarios from '../Filters/Scenarios';
 import DateSlider from './DateSlider';
 import ViewModal from '../ViewModal.js';
 import PropTypes from 'prop-types';

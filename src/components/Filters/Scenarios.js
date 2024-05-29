@@ -3,48 +3,17 @@ import { Select } from 'antd';
 import { InfoCircleTwoTone } from '@ant-design/icons';
 import { formatTitle } from '../../utils/utils';
 import { styles } from '../../utils/constants';
-import { Scenario } from "../../utils/constantsTypes";
 import TooltipHandler from './TooltipHandler';
 
+const ScenariosModeEnum = {
+    chart: 'chart',
+    map: 'map',
+    graph: 'graph',
+    multiple: 'multiple',
+};
 
-enum ScenariosModeEnum {
-    chart = 'chart',
-    map = 'map',
-    graph = 'graph',
-    multiple = 'multiple',
-}
-
-type ScenariosMode =
-    ScenariosModeEnum.chart |
-    ScenariosModeEnum.map |
-    ScenariosModeEnum.graph |
-    ScenariosModeEnum.multiple
-
-
-interface Child {
-    key: string,
-    checkbox: Array<any> // FIXME any should be of type Option Component
-}
-
-
-interface Props {
-    scenarioList: Array<Scenario>,
-    view: ScenariosMode,
-    SCENARIOS: Array<Scenario>,
-    scenario: Scenario,
-    onScenarioClick: (scenarioList: Array<Scenario>) => void,
-    onScenarioClickChart: (scenarioList: Array<Scenario>) => void,
-    onScenarioClickMap: (scenario: Scenario) => void
-}
-
-interface State {
-    children: Array<Child>,
-    showTooltip: boolean,
-    scenariosGraph: Array<Scenario>
-}
-
-class Scenarios extends Component<Props, State> {
-    constructor(props: Props) {
+class Scenarios extends Component {
+    constructor(props) {
         super(props);
         this.state = {
             scenariosGraph: [],
@@ -58,15 +27,13 @@ class Scenarios extends Component<Props, State> {
         const scenariosGraph = Array.from(this.props.SCENARIOS);
         const { Option } = Select;
 
-
         for (let scenario of scenariosGraph) {
-            const child: Child = {
+            const child = {
                 key: scenario.key,
                 checkbox: []
             };
 
             child.checkbox.push(
-                // @ts-ignore value is not required
                 <Option
                     key={scenario.key}>
                     {formatTitle(scenario.key)}
@@ -81,34 +48,33 @@ class Scenarios extends Component<Props, State> {
         })
     }
 
-    componentDidUpdate(prevProp: Props) {
-
+    componentDidUpdate(prevProps) {
         if (this.props.view === ScenariosModeEnum.graph) {
-            if (prevProp.SCENARIOS !== this.props.SCENARIOS ||
-                prevProp.scenarioList !== this.props.scenarioList ||
-                prevProp.scenario !== this.props.scenario) {
-                const {scenarioList} = this.props;
+            if (prevProps.SCENARIOS !== this.props.SCENARIOS ||
+                prevProps.scenarioList !== this.props.scenarioList ||
+                prevProps.scenario !== this.props.scenario) {
+                const { scenarioList } = this.props;
 
                 const keys = Object.values(scenarioList).map(scen => scen.key);
                 const scenariosGraph = Array.from(this.props.SCENARIOS);
 
-                scenariosGraph.map(scenario => {
+                scenariosGraph.forEach(scenario => {
                     if (keys.includes(scenario.key) || scenarioList.length < 2) {
-                        return scenario.disabled = false;
+                        scenario.disabled = false;
                     } else {
-                        return scenario.disabled = true;
+                        scenario.disabled = true;
                     }
                 });
+
                 const children = [];
-                const {Option} = Select;
+                const { Option } = Select;
 
                 for (let scenario of scenariosGraph) {
-                    const child: Child = {
+                    const child = {
                         key: scenario.key,
                         checkbox: []
                     };
                     child.checkbox.push(
-                        // @ts-ignore value is not required
                         <Option
                             key={scenario.key}
                             disabled={scenario.disabled}
@@ -124,21 +90,19 @@ class Scenarios extends Component<Props, State> {
                 })
             }
         } else if (this.props.view === ScenariosModeEnum.chart) {
-
-            if (prevProp.SCENARIOS !== this.props.SCENARIOS ||
-                prevProp.scenarioList !== this.props.scenarioList) {
+            if (prevProps.SCENARIOS !== this.props.SCENARIOS ||
+                prevProps.scenarioList !== this.props.scenarioList) {
 
                 const children = [];
                 const scenariosChart = Array.from(this.props.SCENARIOS);
-                const {Option} = Select;
+                const { Option } = Select;
 
                 for (let scenario of scenariosChart) {
-                    const child: Child = {
+                    const child = {
                         key: scenario.key,
                         checkbox: []
                     };
                     child.checkbox.push(
-                        // @ts-ignore value is not required
                         <Option
                             key={scenario.key}>
                             {formatTitle(scenario.key)}
@@ -152,20 +116,20 @@ class Scenarios extends Component<Props, State> {
                 })
             }
         } else {
-            if (prevProp.scenario !== this.props.scenario) {
-
+            if (prevProps.scenario !== this.props.scenario) {
+                // handle update when view is neither graph nor chart
             }
         }
     }
 
     handleTooltipClick = () => {
-        this.setState({showTooltip: !this.state.showTooltip})
+        this.setState({ showTooltip: !this.state.showTooltip })
     }
 
-    handleChange = (event: any) => { //FIXME Import TS for react-select
+    handleChange = (event) => {
         // prevent user from deselecting all scenarios
         if (event.length === 0) {
-            return
+            return;
         }
 
         switch (this.props.view) {
@@ -177,6 +141,8 @@ class Scenarios extends Component<Props, State> {
                 break;
             case ScenariosModeEnum.map:
                 this.props.onScenarioClickMap(event);
+                break;
+            default:
                 break;
         }
     };
@@ -196,6 +162,8 @@ class Scenarios extends Component<Props, State> {
             case ScenariosModeEnum.map:
                 defaultScenario = [this.props.scenario];
                 graphTags = defaultScenario;
+                break;
+            default:
                 break;
         }
 
@@ -231,4 +199,4 @@ class Scenarios extends Component<Props, State> {
     }
 }
 
-export default Scenarios
+export default Scenarios;

@@ -4,7 +4,7 @@ import { PlusCircleTwoTone } from '@ant-design/icons';
 import _ from 'lodash';
 import GraphContainer from './GraphContainer';
 import Brush from '../Filters/Brush';
-import Scenarios from '../Filters/Scenarios.tsx';
+import Scenarios from '../Filters/Scenarios';
 import Indicators from '../Filters/Indicators';
 import SeverityContainer from '../Filters/SeverityContainer'
 import ActualSwitch from '../Filters/ActualSwitch';
