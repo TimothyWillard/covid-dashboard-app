@@ -1,9 +1,13 @@
-import React, { Component } from 'react';
+import React, { useState, useCallback } from 'react';
+import PropTypes from 'prop-types';
+
 import { Select } from 'antd';
+const { Option } = Select;
 import { InfoCircleTwoTone } from '@ant-design/icons';
+
+import TooltipHandler from './TooltipHandler';
 import { formatTitle } from '../../utils/utils';
 import { styles } from '../../utils/constants';
-import TooltipHandler from './TooltipHandler';
 
 const ScenariosModeEnum = {
     chart: 'chart',
@@ -12,27 +16,77 @@ const ScenariosModeEnum = {
     multiple: 'multiple',
 };
 
-class Scenarios extends Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            scenariosGraph: [],
-            showTooltip: false,
-            children: []
-        }
-    }
+const Scenarios = ({
+    view,
+    scenarioList,
+    SCENARIOS,
+    scenario,
+    onScenarioClick,
+    onScenarioClickChart,
+    onScenarioClickMap,
+}) => {
+    const [ showTooltip, setShowTooltip ] = useState(false);
 
-    componentDidMount() {
-        const children = [];
-        const scenariosGraph = Array.from(this.props.SCENARIOS);
-        const { Option } = Select;
+    const handleTooltipClick = useCallback(() => {
+        setShowTooltip(!showTooltip);
+    }, [ showTooltip ]);
+
+    const handleChange = useCallback((event) => {
+        // prevent user from deselecting all scenarios
+        if (event.length === 0) {
+            return;
+        }
+        switch (view) {
+            case ScenariosModeEnum.graph:
+                onScenarioClick(event);
+                break;
+            case ScenariosModeEnum.chart:
+                onScenarioClickChart(event);
+                break;
+            case ScenariosModeEnum.map:
+                onScenarioClickMap(event);
+                break;
+            default:
+                break;
+        }
+    }, [ view, onScenarioClick, onScenarioClickChart, onScenarioClickMap ]);
+
+
+    let children = [];
+    if (view === ScenariosModeEnum.graph && SCENARIOS && SCENARIOS.length > 0 && scenarioList && scenarioList.length > 0 && scenario) {
+        const keys = Object.values(scenarioList).map(scen => scen.key);
+        const scenariosGraph = Array.from(SCENARIOS);
+
+        scenariosGraph.map(scenario => {
+            if (keys.includes(scenario.key) || scenarioList.length < 2) {
+                return scenario.disabled = false;
+            } else {
+                return scenario.disabled = true;
+            }
+        });
 
         for (let scenario of scenariosGraph) {
             const child = {
                 key: scenario.key,
                 checkbox: []
             };
+            child.checkbox.push(
+                <Option
+                    key={scenario.key}
+                    disabled={scenario.disabled}>
+                    {formatTitle(scenario.key)}
+                </Option>
+            );
+            children.push(child);
+        }
+    } else if (SCENARIOS && SCENARIOS.length > 0) {
+        const scenariosChart = Array.from(SCENARIOS);
 
+        for (let scenario of scenariosChart) {
+            const child = {
+                key: scenario.key,
+                checkbox: []
+            };
             child.checkbox.push(
                 <Option
                     key={scenario.key}>
@@ -41,162 +95,69 @@ class Scenarios extends Component {
             );
             children.push(child);
         }
-
-        this.setState({
-            scenariosGraph,
-            children,
-        })
     }
 
-    componentDidUpdate(prevProps) {
-        if (this.props.view === ScenariosModeEnum.graph) {
-            if (prevProps.SCENARIOS !== this.props.SCENARIOS ||
-                prevProps.scenarioList !== this.props.scenarioList ||
-                prevProps.scenario !== this.props.scenario) {
-                const { scenarioList } = this.props;
-
-                const keys = Object.values(scenarioList).map(scen => scen.key);
-                const scenariosGraph = Array.from(this.props.SCENARIOS);
-
-                scenariosGraph.forEach(scenario => {
-                    if (keys.includes(scenario.key) || scenarioList.length < 2) {
-                        scenario.disabled = false;
-                    } else {
-                        scenario.disabled = true;
-                    }
-                });
-
-                const children = [];
-                const { Option } = Select;
-
-                for (let scenario of scenariosGraph) {
-                    const child = {
-                        key: scenario.key,
-                        checkbox: []
-                    };
-                    child.checkbox.push(
-                        <Option
-                            key={scenario.key}
-                            disabled={scenario.disabled}
-                        >
-                            {formatTitle(scenario.key)}
-                        </Option>
-                    );
-                    children.push(child);
-                }
-                this.setState({
-                    scenariosGraph,
-                    children
-                })
-            }
-        } else if (this.props.view === ScenariosModeEnum.chart) {
-            if (prevProps.SCENARIOS !== this.props.SCENARIOS ||
-                prevProps.scenarioList !== this.props.scenarioList) {
-
-                const children = [];
-                const scenariosChart = Array.from(this.props.SCENARIOS);
-                const { Option } = Select;
-
-                for (let scenario of scenariosChart) {
-                    const child = {
-                        key: scenario.key,
-                        checkbox: []
-                    };
-                    child.checkbox.push(
-                        <Option
-                            key={scenario.key}>
-                            {formatTitle(scenario.key)}
-                        </Option>
-                    );
-                    children.push(child);
-                }
-
-                this.setState({
-                    children
-                })
-            }
-        } else {
-            if (prevProps.scenario !== this.props.scenario) {
-                // handle update when view is neither graph nor chart
-            }
-        }
+    let defaultScenario;
+    let graphTags;
+    switch (view) {
+        case ScenariosModeEnum.graph:
+            defaultScenario = [scenarioList[0].key];
+            graphTags = scenarioList.map(s => s.key);
+            break;
+        case ScenariosModeEnum.chart:
+            defaultScenario = SCENARIOS.map(s => s.name);
+            graphTags = scenarioList;
+            break;
+        case ScenariosModeEnum.map:
+            defaultScenario = [scenario];
+            graphTags = defaultScenario;
+            break;
+        default:
+            break;
     }
 
-    handleTooltipClick = () => {
-        this.setState({ showTooltip: !this.state.showTooltip })
-    }
-
-    handleChange = (event) => {
-        // prevent user from deselecting all scenarios
-        if (event.length === 0) {
-            return;
-        }
-
-        switch (this.props.view) {
-            case ScenariosModeEnum.graph:
-                this.props.onScenarioClick(event);
-                break;
-            case ScenariosModeEnum.chart:
-                this.props.onScenarioClickChart(event);
-                break;
-            case ScenariosModeEnum.map:
-                this.props.onScenarioClickMap(event);
-                break;
-            default:
-                break;
-        }
-    };
-
-    render() {
-        let defaultScenario;
-        let graphTags;
-        switch (this.props.view) {
-            case ScenariosModeEnum.graph:
-                defaultScenario = [this.props.scenarioList[0].key];
-                graphTags = this.props.scenarioList.map(s => s.key);
-                break;
-            case ScenariosModeEnum.chart:
-                defaultScenario = this.props.SCENARIOS.map(s => s.name);
-                graphTags = this.props.scenarioList;
-                break;
-            case ScenariosModeEnum.map:
-                defaultScenario = [this.props.scenario];
-                graphTags = defaultScenario;
-                break;
-            default:
-                break;
-        }
-
-        return (
-            <div>
-                <div className="param-header">SCENARIOS
-                    <TooltipHandler
-                        showTooltip={this.state.showTooltip}
-                        onClick={this.handleTooltipClick}
-                        >
-                        <div className="tooltip">
-                            &nbsp;<InfoCircleTwoTone />
-                            {this.state.showTooltip &&
-                            <span className="tooltip-text">
-                                Scenarios are named for the model run date. 
-                                This means that the model is calibrated only to ground truth data 
-                                that was reported prior to the model run date.
-                            </span> }
-                        </div>
-                    </TooltipHandler>
-                </div>
-                <Select
-                    mode={this.props.view === ScenariosModeEnum.map ? undefined : ScenariosModeEnum.multiple}
-                    style={styles.Selector}
-                    defaultValue={defaultScenario}
-                    value={graphTags}
-                    maxTagTextLength={12}
-                    onChange={this.handleChange}>
-                    {this.state.children.map(child => child.checkbox)}
-                </Select>
+    return (
+        <div>
+            <div className="param-header">
+                SCENARIOS
+                <TooltipHandler
+                    showTooltip={showTooltip}
+                    onClick={handleTooltipClick}>
+                    <div className="tooltip">
+                        &nbsp;<InfoCircleTwoTone />
+                        {showTooltip &&
+                        <span className="tooltip-text">
+                            Scenarios are named for the model run date. 
+                            This means that the model is calibrated only to ground truth data 
+                            that was reported prior to the model run date.
+                        </span>}
+                    </div>
+                </TooltipHandler>
             </div>
-        )
-    }
-}
+            <Select
+                mode={view === ScenariosModeEnum.map ? undefined : ScenariosModeEnum.multiple}
+                style={styles.Selector}
+                defaultValue={defaultScenario}
+                value={graphTags}
+                maxTagTextLength={12}
+                onChange={handleChange}>
+                {children.map(child => child.checkbox)}
+            </Select>
+        </div>
+    );
+};
+
+Scenarios.propTypes = {
+    view: PropTypes.string.isRequired,
+    scenarioList: PropTypes.array,
+    SCENARIOS: PropTypes.array,
+    scenario: PropTypes.oneOfType([
+        PropTypes.object,
+        PropTypes.string,
+    ]),
+    onScenarioClick: PropTypes.func,
+    onScenarioClickChart: PropTypes.func,
+    onScenarioClickMap: PropTypes.func,
+};
 
 export default Scenarios;
