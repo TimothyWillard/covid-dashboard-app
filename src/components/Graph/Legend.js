@@ -315,7 +315,10 @@ const Legend = ({ showConfBounds, showHoveredSim, showActual, x, y }) => {
 
 Legend.propTypes = {
     showConfBounds: PropTypes.bool,
-    showHoveredSim: PropTypes.bool, // This might need to be a number?
+    showHoveredSim: PropTypes.oneOfType([
+        PropTypes.bool,
+        PropTypes.number,
+    ]),
     showActual: PropTypes.bool,
     x: PropTypes.number,
     y: PropTypes.number,
