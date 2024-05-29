@@ -18,7 +18,7 @@ const R0 = ({
     selectedSims
 }) => {
     const [ showTooltip, setShowTooltip ] = useState(false);
-    
+
     const stepRef = useRef(0.1);
 
     const handleChange = useCallback((r0new) => {
@@ -43,7 +43,8 @@ const R0 = ({
     const r0max = max(sortedSims, d => d.r0);
     stepRef.current = (r0max - r0min) / 10;
     const minR0 = r0full[0], maxR0 = r0full[1];
-    const activeMin = r0selected[0].toFixed(1), activeMax = r0selected[1].toFixed(1);
+    const activeMin = r0selected[0].toFixed(1);
+    const activeMax = r0selected[1].toFixed(1);
 
     return (
         <div>
