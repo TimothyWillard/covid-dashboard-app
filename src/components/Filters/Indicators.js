@@ -2,29 +2,10 @@ import React, { Component } from 'react';
 import { Select } from 'antd';
 import { InfoCircleTwoTone } from '@ant-design/icons';
 import { styles } from '../../utils/constants';
-import { SelectValue } from "antd/lib/select";
-import { Indicator } from "../../utils/constantsTypes";
 import TooltipHandler from './TooltipHandler';
 
-
-interface Child {
-    key: string,
-    button: Array<any>
-}
-
-interface Props {
-    onIndicatorClick: (indicator: Indicator) => void,
-    indicators: Array<Indicator>,
-    indicator: Indicator,
-}
-
-interface State {
-    children: Array<Child>,
-    showTooltip: boolean
-}
-
-class Indicators extends Component<Props, State> {
-    constructor(props: Props) {
+class Indicators extends Component {
+    constructor(props) {
         super(props);
         this.state = {
             children: [],
@@ -34,10 +15,10 @@ class Indicators extends Component<Props, State> {
 
     componentDidMount() {
         const children = [];
-        const {Option} = Select;
+        const { Option } = Select;
 
         for (let indicator of this.props.indicators) {
-            const child: Child = {
+            const child = {
                 key: `${indicator.key}-indicator`,
                 button: []
             };
@@ -50,20 +31,20 @@ class Indicators extends Component<Props, State> {
             children.push(child);
         }
 
-        this.setState({children})
+        this.setState({ children })
     }
 
     handleTooltipClick = () => {
-        this.setState({showTooltip: !this.state.showTooltip})
+        this.setState({ showTooltip: !this.state.showTooltip })
     }
 
-    handleChange = (e: SelectValue) => {
+    handleChange = (e) => {
         const item = this.props.indicators.filter(indicator => indicator.key === e)[0];
         this.props.onIndicatorClick(item);
     }
 
     render() {
-        const {indicator} = this.props;
+        const { indicator } = this.props;
         return (
             <div>
                 <div className="param-header">INDICATOR    
@@ -96,4 +77,4 @@ class Indicators extends Component<Props, State> {
     }
 }
 
-export default Indicators
+export default Indicators;

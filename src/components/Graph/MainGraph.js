@@ -5,7 +5,7 @@ import _ from 'lodash';
 import GraphContainer from './GraphContainer';
 import Brush from '../Filters/Brush';
 import Scenarios from '../Filters/Scenarios.tsx';
-import Indicators from '../Filters/Indicators.tsx';
+import Indicators from '../Filters/Indicators';
 import SeverityContainer from '../Filters/SeverityContainer'
 import ActualSwitch from '../Filters/ActualSwitch';
 import R0 from '../Filters/R0';
