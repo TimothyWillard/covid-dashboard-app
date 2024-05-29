@@ -1,6 +1,8 @@
 import React, { Component, Fragment } from 'react';
+
 import { Radio } from 'antd';
 import { InfoCircleTwoTone } from '@ant-design/icons';
+
 import TooltipHandler from './TooltipHandler';
 import { styles } from '../../utils/constants';
 
@@ -17,7 +19,7 @@ class ModeToggle extends Component {
     }
 
     render() {
-        const value = this.props.showConfBounds ? "confidence" : "exceedence";
+        const value = this.props.showConfBounds ? "confidence" : "exceedance";
         return (
             <Fragment>
                 <div className="param-header">MODE
@@ -54,9 +56,9 @@ class ModeToggle extends Component {
                         Confidence Bounds
                     </Radio.Button>
                     <Radio.Button
-                        key="exceedence"
+                        key="exceedance"
                         style={styles.Radio}
-                        value="exceedence">
+                        value="exceedance">
                         Threshold Exceedance
                     </Radio.Button>
                 </Radio.Group>
