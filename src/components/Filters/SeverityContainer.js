@@ -1,29 +1,8 @@
 import React, { Component } from 'react';
 import Severity from '../Filters/Severity';
-import { Scenario, SeverityLevel, Indicator } from "../../utils/constantsTypes";
 
-interface Child {
-    key: string,
-    scenario: Scenario,
-    severity: Array<any>, //FIXME how to type a component
-}
-
-interface Props {
-    scenarioList: Array<Scenario>,
-    severityList: Array<SeverityLevel>,
-    scenarioMap: Array<any>, //FIXME ScenarioMap dict
-    indicator: Indicator,
-    onSeveritiesClick: (i: Child) => void,
-    onSeveritiesHover: (i: string) => void,
-    onSeveritiesHoverLeave: () => void,
-}
-
-interface State {
-    children: Array<Child>,
-}
-
-class SeverityContainer extends Component<Props, State> {
-    constructor(props: Props) {
+class SeverityContainer extends Component {
+    constructor(props) {
         super(props);
         this.state = {
             children: []
@@ -35,14 +14,14 @@ class SeverityContainer extends Component<Props, State> {
         this.setState({ children: [child] })
     }
 
-    componentDidUpdate(prevProp: Props) {
+    componentDidUpdate(prevProps) {
         const { scenarioList, scenarioMap, severityList, indicator } = this.props;
         const newChildren = [];
 
-        if (prevProp.scenarioList !== scenarioList ||
-            prevProp.scenarioMap !== scenarioMap ||
-            prevProp.severityList !== severityList ||
-            prevProp.indicator !== indicator ) {
+        if (prevProps.scenarioList !== scenarioList ||
+            prevProps.scenarioMap !== scenarioMap ||
+            prevProps.severityList !== severityList ||
+            prevProps.indicator !== indicator ) {
 
             for (let i = 0; i < scenarioList.length; i++) {
                 const child = this.buildSeverity(i);
@@ -52,14 +31,14 @@ class SeverityContainer extends Component<Props, State> {
         }
     }
 
-    buildSeverity(i: number) {
+    buildSeverity(i) {
         const { scenarioList, scenarioMap, severityList, indicator } = this.props;
         const keyVal = `${severityList[i].key}_${scenarioList[i].key}`;
 
         // Infection values are the same across all severity
-        const isDisabled = indicator.name === 'Infections' ? true : false;
+        const isDisabled = indicator.name === 'Infections';
 
-        const child: Child = {
+        const child = {
             'key': keyVal,
             'scenario': scenarioList[i],
             'severity': []
@@ -80,11 +59,11 @@ class SeverityContainer extends Component<Props, State> {
         return child;
     }
 
-    handleSeverityClick = (i: Child) => {this.props.onSeveritiesClick(i)}
+    handleSeverityClick = (i) => { this.props.onSeveritiesClick(i) }
 
-    handleSeverityHover = (i: string) => {this.props.onSeveritiesHover(i)}
+    handleSeverityHover = (i) => { this.props.onSeveritiesHover(i) }
 
-    handleSeverityHoverLeave = () => {this.props.onSeveritiesHoverLeave()}
+    handleSeverityHoverLeave = () => { this.props.onSeveritiesHoverLeave() }
 
     render() {
         const { children } = this.state;
@@ -102,4 +81,4 @@ class SeverityContainer extends Component<Props, State> {
     }
 }
 
-export default SeverityContainer
+export default SeverityContainer;
