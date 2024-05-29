@@ -9,7 +9,7 @@ import Indicators from '../Filters/Indicators';
 import SeverityContainer from '../Filters/SeverityContainer'
 import ActualSwitch from '../Filters/ActualSwitch';
 import R0 from '../Filters/R0';
-import ModeToggle from '../Filters/ModeToggle.tsx';
+import ModeToggle from '../Filters/ModeToggle';
 import Sliders from '../Filters/Sliders';
 import ViewModal from '../ViewModal.js';
 

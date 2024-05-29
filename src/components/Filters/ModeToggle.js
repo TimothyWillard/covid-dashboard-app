@@ -4,17 +4,8 @@ import { InfoCircleTwoTone } from '@ant-design/icons';
 import TooltipHandler from './TooltipHandler';
 import { styles } from '../../utils/constants';
 
-interface Props {
-    showConfBounds: boolean,
-    onConfClick: () => void,
-}
-
-interface State {
-    showTooltip: boolean,
-}
-
-class ModeToggle extends Component<Props, State> {
-    constructor(props: Props) {
+class ModeToggle extends Component {
+    constructor(props) {
         super(props);
         this.state = {
             showTooltip: false
@@ -22,7 +13,7 @@ class ModeToggle extends Component<Props, State> {
     }
 
     handleTooltipClick = () => {
-        this.setState({showTooltip: !this.state.showTooltip})
+        this.setState({ showTooltip: !this.state.showTooltip })
     }
 
     render() {
@@ -74,4 +65,4 @@ class ModeToggle extends Component<Props, State> {
     }
 }
 
-export default ModeToggle
+export default ModeToggle;
