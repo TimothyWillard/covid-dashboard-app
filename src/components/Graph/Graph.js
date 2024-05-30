@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import React, { useRef, useState, useCallback } from 'react'
+import React, { useRef, useState, useCallback, useEffect, useLayoutEffect } from 'react'
 import { Tooltip } from 'antd'
 import PropTypes from 'prop-types';
 
@@ -93,6 +93,39 @@ const Graph = ({
         }
     }, [ showConfBounds, keyVal, xScale, yScale, selectedDates, series ]);
 
+    useLayoutEffect(() => {
+        if (selectedDates && selectedDates.length > 0 && confBounds && confBounds.length > 0 && confBoundsRef.current) {
+            const areaGenerator = area()
+                .curve(curveLinear)
+                .x((d, i) => {
+                    return xScale(selectedDates[i]);
+                })
+                .y0((d) => {
+                    return yScale(d.p10);
+                })
+                .y1((d) => {
+                    return yScale(d.p90);
+                });
+            const confBoundsLineGenerator = line()
+                .x((d, i) => {
+                    return xScale(selectedDates[i]);
+                })
+                .y((d) => {
+                    return yScale(d.p50);
+                })
+            const confBoundsAreaPath = areaGenerator(confBounds);
+            const confBoundsMeanLinePath = confBoundsLineGenerator(confBounds);
+            const confBoundsNode = select(confBoundsRef.current);
+            confBoundsNode
+                .selectAll('.confBoundsArea')
+                .attr('d', confBoundsAreaPath);
+            confBoundsNode
+                .selectAll('.confBoundsMean')
+                .attr('d', confBoundsMeanLinePath);
+        }
+        return () => {};
+    }, [ selectedDates, confBounds, confBoundsRef, xScale, yScale ]);
+
     let simPaths = [];
     let confBoundsAreaPath = [];
     let confBoundsMeanLinePath = [];
@@ -151,36 +184,6 @@ const Graph = ({
                 .attr('d', (d) => {
                     return lineGenerator(d.vals);
                 });
-        }
-        // Formerly drawConfBounds
-        const areaGenerator = area()
-            .curve(curveLinear)
-            .x((d, i) => {
-                return xScale(selectedDates[i]);
-            })
-            .y0((d) => {
-                return yScale(d.p10);
-            })
-            .y1((d) => {
-                return yScale(d.p90);
-            });
-        const confBoundsLineGenerator = line()
-            .x((d, i) => {
-                return xScale(selectedDates[i]);
-            })
-            .y((d) => {
-                return yScale(d.p50);
-            })
-        if (confBounds && confBounds.length > 0 && confBoundsRef.current) {
-            confBoundsAreaPath = areaGenerator(confBounds);
-            confBoundsMeanLinePath = confBoundsLineGenerator(confBounds);
-            const confBoundsNode = select(confBoundsRef.current);
-            confBoundsNode
-                .selectAll('.confBoundsArea')
-                .attr('d', confBoundsAreaPath);
-            confBoundsNode
-                .selectAll('.confBoundsMean')
-                .attr('d', confBoundsMeanLinePath);
         }
     }
 
@@ -279,8 +282,7 @@ const Graph = ({
                     strokeWidth={2}
                     fillOpacity={0}
                     clipPath={'url(#confClip)'}/>
-            </g>
-            }
+            </g>}
             {(showActual && actual) &&
             <g ref={actualRef}>
                 <clipPath 
@@ -303,8 +305,7 @@ const Graph = ({
                         clipPath={'url(#actualClip)'}
                         className={'actualDataCircle'}/>
                 ))}
-            </g>
-            }
+            </g>}
             {!showConfBounds &&
             <g ref={thresholdRef}>
                 <line
