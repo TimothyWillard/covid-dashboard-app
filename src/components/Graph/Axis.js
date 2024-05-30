@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, forwardRef } from 'react'
 import { axisLeft, axisBottom, axisRight } from 'd3-axis'
 import { timeFormat } from 'd3-time-format'
 import { select } from 'd3-selection'
@@ -7,7 +7,8 @@ import PropTypes from 'prop-types';
 import { addCommas, formatTitle } from '../../utils/utils.js'
 import { monthDateFormat } from '../../utils/constants'
 
-const Axis = ({ scale, tickNum, orientation, view, width, x, y }) => {
+// eslint-disable-next-line no-unused-vars
+const Axis = forwardRef(({ scale, tickNum, orientation, view, width, x, y }, ref) => {
   // const [ axis, setAxis ] = useState(null);
   const axisRef = useRef(null);
   const axisElementRef = useRef(null);
@@ -100,7 +101,9 @@ const Axis = ({ scale, tickNum, orientation, view, width, x, y }) => {
   }, [ axisRef, axisElementRef, orientation, scale, view ]);
 
   return <g ref={axisElementRef} transform={`translate(${x}, ${y})`} />;
-}
+});
+
+Axis.displayName = 'Axis';
 
 Axis.propTypes = {
   scale: PropTypes.func,
