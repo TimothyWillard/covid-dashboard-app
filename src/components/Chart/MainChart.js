@@ -23,21 +23,6 @@ const MainChart = ({
     width, 
     height
 }) => {
-    // this.state = {
-    //     dataLoaded: false,
-    //     datasetChart: {},
-    //     dates: [],
-    //     SCENARIOS: [],
-    //     scenarioList: [],   // selected scenarios in Chart view
-    //     scenarioMap: {},    // maps all scenarios to list of severities
-    //     statList: [],
-    //     datePickerActive: false,
-    //     start: new Date(),
-    //     end: new Date(),
-    //     scale: 'power', // TS migration: ScaleTypeEnum
-    //     modalVisible: false,
-    //     firstModalVisit: true,
-    // };
     const [dataLoaded, setDataLoaded] = useState(false);
     const [datasetChart, setDatasetChart] = useState({});
     const [dates, setDates] = useState([]);
