@@ -1,4 +1,4 @@
-import React, { Fragment, useState, useCallback } from 'react';
+import React, { Fragment, useState, useCallback, useLayoutEffect } from 'react';
 import { Row, Col } from 'antd';
 import PropTypes from 'prop-types';
 
@@ -30,6 +30,7 @@ const ChartContainer = ({
         tenth: 0,
         ninetyith: 0,
     });
+    const [, setTriggerRender] = useState(false);
 
     const handleCalloutInfo = useCallback((statLabel, median, tenth, ninetyith) => {
         setCalloutStats({
@@ -50,35 +51,38 @@ const ChartContainer = ({
         }
     }, []);
 
-    let children = [];
+    useLayoutEffect(() => {
+        setTriggerRender(prev => !prev);
+    }, [ indicators ])
+
+    let children = {};
     if (indicators && indicators.length > 0) {
         for (let indicator of indicators) {
             const child = {
                 key: `${indicator.key}-chart`,
-                chart: {},
+                chart: (
+                    <Chart
+                        key={`${indicator.key}-chart`}
+                        dataset={dataset}
+                        scenarios={scenarios}
+                        scenarioMap={scenarioMap}
+                        firstDate={firstDate}
+                        start={start}
+                        end={end}
+                        indicator={indicator.key}
+                        statLabel={indicator.name}
+                        indicators={indicators}
+                        width={width}
+                        height={height/Object.keys(indicators).length}
+                        handleCalloutInfo={handleCalloutInfo}
+                        handleCalloutLeave={handleCalloutLeave}
+                        handleScenarioHover={handleScenarioHighlight}
+                        scale={scale} />
+                ),
             }
-            child.chart =
-                <Chart
-                    key={`${indicator.key}-chart`}
-                    dataset={dataset}
-                    scenarios={scenarios}
-                    scenarioMap={scenarioMap}
-                    firstDate={firstDate}
-                    start={start}
-                    end={end}
-                    indicator={indicator.key}
-                    statLabel={indicator.name}
-                    indicators={indicators}
-                    width={width}
-                    height={height/Object.keys(indicators).length}
-                    handleCalloutInfo={handleCalloutInfo}
-                    handleCalloutLeave={handleCalloutLeave}
-                    handleScenarioHover={handleScenarioHighlight}
-                    scale={scale}/>
             children[indicator.key] = child;
         }
     }
-
     const geoidName = `${GEOIDS[geoid]}`;
 
     return (

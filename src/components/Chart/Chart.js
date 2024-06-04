@@ -148,7 +148,7 @@ const Chart = ({
             yScaleRef.current = null;
             scaleDomainsRef.current = false;
         };
-    }, [ dataset, scenarios, scenarioMap, firstDate, start, end, indicator, width, height, scale ]);
+    }, [ dataset, scenarios, scenarioMap, firstDate, start, end, indicator, indicators, width, height, scale ]);
 
     // Formerly updateSummaryIndicators
     useEffect(() => {
@@ -216,7 +216,7 @@ const Chart = ({
         }
         setTriggerRender(prev => !prev);
         return () => {};
-    }, [ chartRef, scenarios, width, indicator, scenarioMap, quantileObjRef, xScaleRef, yScaleRef, indicators, scale ]);
+    }, [ chartRef, scenarios, width, indicator, scenarioMap, quantileObjRef, xScaleRef, yScaleRef, scaleDomainsRef, indicators, scale ]);
 
     // Formerly drawSummaryIndicators
     let summaryIndicators;
