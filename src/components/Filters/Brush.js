@@ -43,7 +43,6 @@ const Brush = ({
     onBrushEnd,
 }) => {
     const [ scales, setScales ] = useState({});
-    // const [ brush, setBrush ] = useState(null);
     const [ simPaths, setSimPaths ] = useState([]);
 
     const [ stateWidth, setStateWidth ] = useState(-1);
@@ -56,8 +55,6 @@ const Brush = ({
     const brush = useRef(null);
     const brushRef = useRef(null);
 
-    // const lineGeneratorRef = useRef(null);
-    
     const brushed = useCallback((event) => {
         const selection = event.selection;
         if (selection == null || scales == null || Object.keys(scales).length === 0) {
@@ -87,11 +84,8 @@ const Brush = ({
                 .defined(d => !isNaN(d))
                 .x((d, i) => updatedScales.xScale(dates[i]))
                 .y(d => updatedScales.yScale(d));
-            // lineGeneratorRef.current.x((d, i) => updatedScales.xScale(dates[i]));
-            // lineGeneratorRef.current.y(d => updatedScales.yScale(d));
-            // generate simPaths from lineGeneratorRef.current
+            // generate simPaths from lineGenerator
             const simPathsLocal = series.map((d) => {
-                // return lineGeneratorRef.current(d.vals);
                 return lineGenerator(d.vals);
             });
             // update state
@@ -100,15 +94,7 @@ const Brush = ({
             // get svg node
             const simPathsNode = select(simPathsRef.current)
             // update the paths with new data
-
-            console.log('b');
-            console.log(lineGenerator);
-            console.log(series);
-            console.log('b');
-
             if (animateTransition) {
-                console.log('c');
-                
                 simPathsNode.selectAll('.simPath')
                     .data(series)
                     .transition()
@@ -125,9 +111,7 @@ const Brush = ({
                         // set new vals to state
                         setScales(updatedScales);
                     })
-                
             } else {
-                console.log('d');
                 simPathsNode.selectAll('.simPath')
                     .data(series)
                     .attr("d", d => lineGenerator(d.vals))
@@ -163,7 +147,6 @@ const Brush = ({
             .y(d => updatedScales.yScale(d));
         
         const simPathsLocal = series.map((d) => {
-            // return lineGeneratorRef.current(d.vals);
             return lineGenerator(d.vals);
         });
 
@@ -188,15 +171,6 @@ const Brush = ({
         setStateWidth(width);
         setSimPaths(simPathsLocal);
     }, [ series, dates, width, height, xAxis, xAxisRef, brushRef, brush, dateRange ]);
-
-    // useEffect(() => {
-    //     if (lineGeneratorRef === null || lineGeneratorRef.current === null) {
-    //         lineGeneratorRef.current = line().defined(d => !isNaN(d));
-    //     }
-    //     return () => {
-    //         lineGeneratorRef.current = null;
-    //     }
-    // }, [ lineGeneratorRef ]);
 
     useEffect(() => {
         if (brush === null || brush.current === null) {
@@ -227,10 +201,6 @@ const Brush = ({
     useEffect(() => {
         setupBrush();
     }, []);
-
-    console.log('a');
-    console.log(simPaths);
-    console.log('a');
 
     return (
         <div className='brush-wrapper'>
