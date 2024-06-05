@@ -1,4 +1,3 @@
-// import React, { Component, useEffect, useState } from 'react';
 import React, { useEffect, useState } from 'react';
 import { Layout } from 'antd';
 import { defaultGeoid, margin, dimMultipliers } from '../utils/constants';
