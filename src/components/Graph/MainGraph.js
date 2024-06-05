@@ -263,42 +263,38 @@ const MainGraph = ({
     }, [ showActual ]);
 
     const handleStatSliderChange = useCallback((thresh) => {
-        const seriesListCopy = Array.from(seriesList);
-        const allDatesSeriesCopy = Array.from(allDatesSeries);
+        const seriesListLocal = Array.from(seriesList);
+        const allDatesSeriesLocal = Array.from(allDatesSeries);
         // flag Sims for Brush
-        flagSims(allDatesSeriesCopy, thresh, dates, dateThreshold);
+        flagSims(allDatesSeriesLocal, thresh, dates, dateThreshold);
         const percExceedenceList = [];
         // flag Sims for seriesList
-        for (let i = 0; i < seriesListCopy.length; i++) {
-            const simsOver = flagSims(seriesListCopy[i], thresh, selectedDates, dateThreshold);
-            const percExceedence = simsOver / seriesListCopy[i].length;
+        for (let i = 0; i < seriesListLocal.length; i++) {
+            const simsOver = flagSims(seriesListLocal[i], thresh, selectedDates, dateThreshold);
+            const percExceedence = simsOver / seriesListLocal[i].length;
             percExceedenceList.push(percExceedence);
         }
-        setSeriesList(seriesListCopy);
-        setAllDatesSeries(allDatesSeriesCopy);
         setIndicatorThreshold(+thresh);
         setPercExceedenceList(percExceedenceList);
         setAnimateTransition(false);
-    }, [ selectedDates, dateThreshold, dates, seriesList, allDatesSeries ]);
+    }, [ seriesList, allDatesSeries, selectedDates, dateThreshold, dates ]);
 
     const handleDateSliderChange = useCallback((thresh) => {
-        const seriesList = Array.from(seriesList);
-        const allDatesSeries = Array.from(allDatesSeries);
+        const seriesListLocal = Array.from(seriesList);
+        const allDatesSeriesLocal = Array.from(allDatesSeries);
         // flag Sims for Brush
-        flagSims(allDatesSeries, indicatorThreshold, dates, thresh);
+        flagSims(allDatesSeriesLocal, indicatorThreshold, dates, thresh);
         const percExceedenceList = [];
         // flag Sims for seriesList
-        for (let i = 0; i < seriesList.length; i++) {
-            const simsOver = flagSims(seriesList[i], indicatorThreshold, selectedDates, thresh);
-            const percExceedence = simsOver / seriesList[i].length;
+        for (let i = 0; i < seriesListLocal.length; i++) {
+            const simsOver = flagSims(seriesListLocal[i], indicatorThreshold, selectedDates, thresh);
+            const percExceedence = simsOver / seriesListLocal[i].length;
             percExceedenceList.push(percExceedence);
         }
-        setSeriesList(seriesList);
-        setAllDatesSeries(allDatesSeries);
         setDateThreshold(thresh);
         setPercExceedenceList(percExceedenceList);
         setAnimateTransition(false);
-    }, [ indicatorThreshold, selectedDates, dates ]);
+    }, [ seriesList, allDatesSeries, selectedDates, indicatorThreshold, dates ]);
 
     const handleBrushRange = useCallback((dateRange) => {
         setDateRange(dateRange);
