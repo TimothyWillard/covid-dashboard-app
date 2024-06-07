@@ -3,7 +3,7 @@ import { Layout, Col } from 'antd';
 import { styles } from '../utils/constants';
 
 const { Content } = Layout;
-
+ 
 export default function Methodology() {
     return (
         <Content id="methods" style={styles.ContainerWhite}>
@@ -36,7 +36,7 @@ export default function Methodology() {
                         projections of confirmed cases, hospitalizations, ICU admissions, ventilators used, 
                         and deaths after accounting for the probability, time delay, and duration 
                         of these more severe health outcomes. 
-                        Risks are standardized according to the age distribution of a given county's 
+                        Risks are standardized according to the age distribution of a given county&apos;s 
                         population based on our best estimates from the scientific literature.
                         </li>
                     </ul>
@@ -65,7 +65,7 @@ export default function Methodology() {
                     </div>
                     <div className="methods-header">Further Information</div> 
                     <div>
-                        The original research paper, <a className="customLink" href="https://www.medrxiv.org/content/10.1101/2020.06.11.20127894v1.full.pdf">"A scenario modeling pipeline for COVID-19 emergency planning"</a>.
+                        The original research paper, <a className="customLink" href="https://www.medrxiv.org/content/10.1101/2020.06.11.20127894v1.full.pdf">&quot;A scenario modeling pipeline for COVID-19 emergency planning&quot;</a>.
                         <br />
                         The open-source repository for the project, <a className="customLink" href="https://github.com/HopkinsIDD/COVIDScenarioPipeline/">COVIDScenarioPipeline Github</a>.
                     </div>
