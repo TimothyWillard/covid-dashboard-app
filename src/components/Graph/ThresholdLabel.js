@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 
 import TooltipHandler from '../Filters/TooltipHandler';
 import { addCommas, getReadableDate, getStepValue } from '../../utils/utils';
-import { getClassForActiveState } from "../../utils/typeUtils";
+import getClassForActiveState from "../../utils/style";
 
 const ThresholdLabel = ({ classProps, indicatorThreshold, seriesMax, dateThreshold, percExceedence, label, statSliderActive, dateSliderActive }) => {
     const [ showTooltip, setShowTooltip ] = useState(false);
