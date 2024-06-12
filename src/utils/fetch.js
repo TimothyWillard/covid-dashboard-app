@@ -1,6 +1,5 @@
 import { s3BucketUrl } from '../store/config';
-import { USE_LOCAL_GEOID, LOCAL_GEOID, USE_LOCAL_ACTUALS, LOCAL_ACTUALS,
-    CONFIGS } from '../store/config.tsx';
+import { USE_LOCAL_GEOID, LOCAL_GEOID, USE_LOCAL_ACTUALS, LOCAL_ACTUALS, CONFIGS } from '../store/config';
 
 export async function fetchDataset(geoid) {
     // fetch dataset json for given geoid from s3 bucket e.g. 06085
