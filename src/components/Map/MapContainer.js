@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Map from '../Map/Map';
 import { getDateIdx, getReadableDate, formatTitle } from '../../utils/utils';
-import { GEOIDS } from '../../utils/geoids.tsx';
+import { GEOIDS } from '../../utils/geoids';
 import { mapHighColorPalette, mapLowColorPalette } from '../../utils/colors';
 import { scalePow } from 'd3-scale';
 import { select } from 'd3-selection';

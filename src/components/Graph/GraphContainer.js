@@ -5,7 +5,7 @@ import PropTypes from 'prop-types';
 
 import { formatTitle } from '../../utils/utils';
 import { margin } from '../../utils/constants';
-import { GEOIDS } from '../../utils/geoids.tsx';
+import { GEOIDS } from '../../utils/geoids';
 
 import Graph from './Graph';
 import Axis from './Axis';

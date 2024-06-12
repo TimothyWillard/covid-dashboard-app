@@ -6,7 +6,7 @@ import Chart from './Chart';
 import CalloutLabel from './CalloutLabel';
 import ChartLegend from './ChartLegend';
 
-import { GEOIDS } from '../../utils/geoids.tsx';
+import { GEOIDS } from '../../utils/geoids';
 import { getReadableDate, formatTitle } from '../../utils/utils';
 
 const ChartContainer = ({

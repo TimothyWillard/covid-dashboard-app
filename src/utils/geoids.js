@@ -1,9 +1,4 @@
-
-export type Geoids = {
-    [key: string]: string
-}
-
-export const GEOIDS: Geoids = {
+export const GEOIDS = {
     "01": "Alabama",
     "02": "Alaska",
     "04": "Arizona",
@@ -3192,5 +3187,5 @@ export const GEOIDS: Geoids = {
     "56039": "Teton County, WY",
     "56041": "Uinta County, WY",
     "56043": "Washakie County, WY",
-    "56045": "Weston County, WY"
+    "56045": "Weston County, WY",
 }
