@@ -2,7 +2,7 @@ import { CONFINTERVALS } from './constants';
 
 function calcQuantile(sortedArr, percentile) {
     let result;
-    const index = percentile / 100. * (sortedArr.length - 1);
+    const index = percentile / 100 * (sortedArr.length - 1);
 
     if (Math.floor(index) === index) {
         result = sortedArr[index];
