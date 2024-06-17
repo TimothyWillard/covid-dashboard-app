@@ -1,48 +1,29 @@
-import { s3BucketUrl } from '../store/config';
-import { USE_LOCAL_GEOID, LOCAL_GEOID, USE_LOCAL_ACTUALS, LOCAL_ACTUALS, CONFIGS } from '../store/config';
+import { s3BucketUrl, localDir } from '../store/config';
 
-export async function fetchDataset(geoid) {
-    // fetch dataset json for given geoid from s3 bucket e.g. 06085
-    // check if file is local or use api
-    
-    if (USE_LOCAL_GEOID) {
-        return require(`../store/${LOCAL_GEOID}`);
-    } else {
-        let response = await fetch(`${s3BucketUrl}${geoid}.json`);
-        if (!response.ok) {
-            throw new Error(`HTTP error for ${geoid}. Status: ${response.status}`)
+export async function fetchJSON(type, geoid) {
+    // First determine the filename to get
+    let filename = `${type}.json`;
+    if (type === 'dataset' || type === 'actuals') {
+        if (!geoid) {
+            console.error(`The type given was '${type}', but geoid is '${geoid}'. No data will be found.`);
+        }
+        if (type === 'dataset') {
+            filename = `${geoid}.json`;
         } else {
-            return await response.json();
+            filename = `${geoid}_actuals.json`;
         }
     }
-}
-
-export async function fetchActuals(geoid) {
-    // fetch ground truth json for given geoid from s3 bucket e.g. 06085_actual
-    
-    if (USE_LOCAL_ACTUALS) {
-        return require(`../store/${LOCAL_ACTUALS}`);
-    } else {
-        let response = await fetch(`${s3BucketUrl}${geoid}_actuals.json`);
-        if (!response.ok) {
-            throw new Error(`HTTP error for ${geoid} actuals. Status: ${response.status}`)
-        } else {
-            return await response.json();
-        }
+    // Next figure out where we're getting it from
+    if (localDir) {
+        const dir = localDir.charAt(localDir.length - 1) !== '/' ? `${localDir}/` : localDir;
+        console.log(`Acquiring type '${type}' and geoid '${geoid}' from '${dir}${filename}'.`)
+        return require(`${dir}${filename}`);
     }
-}
-
-export async function fetchConfig(type) {
-    // fetch configs from s3 bucket like 'outcomes', 'statsForMap', 'countyBoundaries'
-    
-    if (CONFIGS[type].use_local) {
-        return require(`../store/${CONFIGS[type].file_name}`);
-    } else {
-        let response = await fetch(`${s3BucketUrl}${type}.json`);
-        if (!response.ok) {
-            throw new Error(`HTTP error for outcomes. Status: ${response.status}`)
-        } else {
-            return await response.json();
-        }
+    const url = s3BucketUrl.charAt(s3BucketUrl.length - 1) !== '/' ? `${s3BucketUrl}/` : s3BucketUrl;
+    console.log(`Acquiring type '${type}' and geoid '${geoid}' from '${url}${filename}'.`)
+    let response = await fetch(`${url}${filename}`);
+    if (!response.ok) {
+        throw new Error(`HTTP error for retrieving file type '${type}' for geoid '${geoid}'. Status: ${response.status}.`)
     }
+    return await response.json();
 }

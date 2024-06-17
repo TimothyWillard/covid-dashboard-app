@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Layout } from 'antd';
 import { defaultGeoid, margin, dimMultipliers } from '../utils/constants';
 import { getGraphContainerDimensions, getMapContainerDimensions } from '../utils/dimensions';
-import { fetchDataset, fetchActuals, fetchConfig } from '../utils/fetch';
+import { fetchJSON } from '../utils/fetch';
 import Search from './Search/Search'
 import MainGraph from './Graph/MainGraph';
 import MainChart from './Chart/MainChart';
@@ -36,9 +36,9 @@ export default function MainContainer() {
 
     useEffect(() => {
         const fetchData = async() => {
-            const dataset = await fetchDataset(geoid);
-            const actuals = await fetchActuals(geoid);
-            const outcomes = await fetchConfig('outcomes');
+            const dataset = await fetchJSON('dataset', geoid);
+            const actuals = await fetchJSON('actuals', geoid);
+            const outcomes = await fetchJSON('outcomes');
             const indicators = Object.keys(outcomes).map((obj) => outcomes[obj]);
             setDataset(dataset);
             setActuals(actuals);

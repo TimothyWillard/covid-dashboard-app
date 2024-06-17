@@ -9,7 +9,7 @@ import PropTypes from 'prop-types';
 
 import { styles } from '../../utils/constants';
 import { buildScenarios } from '../../utils/utils';
-import { fetchConfig } from '../../utils/fetch';
+import { fetchJSON } from '../../utils/fetch';
 import { utcParse, timeFormat } from 'd3-time-format'
 
 const { Content } = Layout;
@@ -102,8 +102,8 @@ const MainMap = ({ geoid, dataset, indicators, width, height }) => {
     /* eslint-disable react-hooks/exhaustive-deps */
     useEffect(() => {
         const fetchData = async() => {
-            const indForMap = await fetchConfig('statsForMap');
-            const stateBound = await fetchConfig('countyBoundaries');
+            const indForMap = await fetchJSON('statsForMap');
+            const stateBound = await fetchJSON('countyBoundaries');
             setIndicatorsForMap(indForMap);
             setStateBoundaries(stateBound);
         }
