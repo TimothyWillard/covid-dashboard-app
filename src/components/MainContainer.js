@@ -37,7 +37,7 @@ export default function MainContainer() {
 
     useEffect(() => {
         const fetchData = async() => {
-            const validGeoids = await fetchJSON('validGeoids');
+            const validGeoids = await fetchJSON('validGeoids', null, {});
             let localGeoid = geoid;
             if (localGeoid === -1) {
                 // Populate the default value dynamically
@@ -51,8 +51,8 @@ export default function MainContainer() {
                 }
             }
             const dataset = await fetchJSON('dataset', localGeoid);
-            const actuals = await fetchJSON('actuals', localGeoid);
-            const outcomes = await fetchJSON('outcomes');
+            const actuals = await fetchJSON('actuals', localGeoid, {});
+            const outcomes = await fetchJSON('outcomes', null, {});
             const indicators = Object.keys(outcomes).map((obj) => outcomes[obj]);
             setDataset(dataset);
             setActuals(actuals);

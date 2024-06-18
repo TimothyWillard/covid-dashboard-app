@@ -1,6 +1,6 @@
 import { s3BucketUrl, localDir } from '../store/config';
 
-export async function fetchJSON(type, geoid) {
+export async function fetchJSON(type, geoid, fallback) {
     // First determine the filename to get
     let filename = `${type}.json`;
     if (type === 'dataset' || type === 'actuals') {
@@ -28,7 +28,17 @@ export async function fetchJSON(type, geoid) {
     }
     let response = await fetch(`${url}`);
     if (!response.ok) {
-        throw new Error(`HTTP error for retrieving file type '${type}' for geoid '${geoid}'. Status: ${response.status}.`)
+        if (!fallback) {
+            throw new Error(`HTTP error for retrieving file type '${type}' for geoid '${geoid}'. Status: ${response.status}.`);
+        }
+        console.error(`HTTP error for retrieving file type '${type}' for geoid '${geoid}'. Status: ${response.status}.`);
+        return fallback;
     }
-    return await response.json();
+    let data = fallback;
+    try {
+        data = await response.json();
+    } catch{
+        console.error(`Encountered an error parsing the JSON response from type '${type}' for geoid '${geoid}'. Falling back.`)
+    }
+    return data;
 }
