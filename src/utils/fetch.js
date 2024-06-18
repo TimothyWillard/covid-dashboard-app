@@ -14,14 +14,19 @@ export async function fetchJSON(type, geoid) {
         }
     }
     // Next figure out where we're getting it from
+    let url = '';
     if (localDir) {
-        const dir = localDir.charAt(localDir.length - 1) !== '/' ? `${localDir}/` : localDir;
-        console.log(`Acquiring type '${type}' and geoid '${geoid}' from '${dir}${filename}'.`)
-        return require(`${dir}${filename}`);
+        let dir = localDir.charAt(localDir.length - 1) !== '/' ? `${localDir}/` : localDir;
+        dir = dir.charAt(0) !== '/' ? `/${dir}` : dir;
+        url = `${dir}${filename}`;
+        console.log(`Acquiring type '${type}' and geoid '${geoid}' from '${url}'.`);
+        // return require(`${dir}${filename}`);
+    } else {
+        url = s3BucketUrl.charAt(s3BucketUrl.length - 1) !== '/' ? `${s3BucketUrl}/` : s3BucketUrl;
+        url = `${url}${filename}`;
+        console.log(`Acquiring type '${type}' and geoid '${geoid}' from '${url}'.`);
     }
-    const url = s3BucketUrl.charAt(s3BucketUrl.length - 1) !== '/' ? `${s3BucketUrl}/` : s3BucketUrl;
-    console.log(`Acquiring type '${type}' and geoid '${geoid}' from '${url}${filename}'.`)
-    let response = await fetch(`${url}${filename}`);
+    let response = await fetch(`${url}`);
     if (!response.ok) {
         throw new Error(`HTTP error for retrieving file type '${type}' for geoid '${geoid}'. Status: ${response.status}.`)
     }
