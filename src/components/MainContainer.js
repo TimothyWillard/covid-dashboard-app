@@ -15,9 +15,10 @@ export default function MainContainer() {
     const [ initialMapContainerW, initialMapContainerH ] = getGraphContainerDimensions();
 
     const [ dataset, setDataset ] = useState({});
-    const [ geoid, setGeoid ] = useState(defaultGeoid);
+    const [ geoid, setGeoid ] = useState(-1); 
     const [ actuals, setActuals ] = useState({});
     const [ indicators, setIndicators ] = useState([]);
+    const [ , setValidGeoids ] = useState({});
     const [ fetchErrors, setFetchErrors ] = useState(''); 
     const [ dataLoaded, setDataLoaded ] = useState(false);
     const [ graphW, setGraphW ] = useState(initialGraphW);
@@ -36,13 +37,27 @@ export default function MainContainer() {
 
     useEffect(() => {
         const fetchData = async() => {
-            const dataset = await fetchJSON('dataset', geoid);
-            const actuals = await fetchJSON('actuals', geoid);
+            const validGeoids = await fetchJSON('validGeoids');
+            let localGeoid = geoid;
+            if (localGeoid === -1) {
+                // Populate the default value dynamically
+                // to handle incomplete geographies
+                if (validGeoids && validGeoids['geoids']) {
+                    localGeoid = validGeoids['geoids'][0];
+                    setGeoid(localGeoid);
+                } else {
+                    localGeoid = defaultGeoid;
+                    setGeoid(defaultGeoid);
+                }
+            }
+            const dataset = await fetchJSON('dataset', localGeoid);
+            const actuals = await fetchJSON('actuals', localGeoid);
             const outcomes = await fetchJSON('outcomes');
             const indicators = Object.keys(outcomes).map((obj) => outcomes[obj]);
             setDataset(dataset);
             setActuals(actuals);
             setIndicators(indicators);
+            setValidGeoids(validGeoids);
         }
         fetchData()
             .then(() => {
