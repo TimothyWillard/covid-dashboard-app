@@ -133,7 +133,7 @@ const MainGraph = ({
             // set dateRange to a default based on equal padding around date of scenario run
             const currIdx = dates.findIndex(date => formatDate(date) === formatDate(dateThreshold));
             const datePadding = dates.length - currIdx;
-            const startIdx = dates.length - 1 - (datePadding * 2);
+            const startIdx = Math.max(dates.length - 1 - (datePadding * 2), 0);
             
             // have a multiple of ten pad each side of the dateRange - alternative way
             // const numDates = dates.length
