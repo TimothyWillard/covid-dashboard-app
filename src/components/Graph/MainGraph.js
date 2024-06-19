@@ -104,7 +104,6 @@ const MainGraph = ({
     const initialize = useCallback((dataset) => {
         // initialize() trigged on mount and Dataset change
         if (Object.keys(dataset).length > 0 && 
-            Object.keys(actuals).length > 0 && 
             Object.keys(indicators).length > 0) {
             // SCENARIOS: various scenario variables used for a given geoid
             const SCENARIOS = buildScenarios(dataset);  
@@ -149,7 +148,12 @@ const MainGraph = ({
             
             const confBoundsList = getConfBounds(dataset, [firstScenario], severityList, firstIndicator, dates, idxMin, idxMax);
 
-            const actualList = getActuals(actuals, firstIndicator, [firstScenario]);
+            let actualList = [];
+            if (Object.keys(actuals).length > 0) {
+                actualList = getActuals(actuals, firstIndicator, [firstScenario]);
+            } else {
+                console.log('Graph Warning: Actuals is empty');
+            }
 
             const r0full = getR0range(dataset, firstScenario, sevList[0], firstIndicator);
             // seriesListForBrush used by handleBrush to initialize instead of R0 filtering 

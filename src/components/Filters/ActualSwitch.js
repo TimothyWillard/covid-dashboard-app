@@ -14,7 +14,7 @@ const ActualSwitch = ({ showActual, actualList, onChange }) => {
     };
 
     // assumes ground truth data exists for all scenarios if it exists for one
-    const isDisabled = actualList[0].length === 0;
+    const isDisabled = actualList.length === 0 || actualList[0].length === 0;
 
     return (
         <Row gutter={styles.gutter} style={styles.Switch}>
