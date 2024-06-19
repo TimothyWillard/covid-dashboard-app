@@ -8,7 +8,6 @@ const parseDate = utcParse('%Y-%m-%d');
 
 export function buildScenarios(dataset) {
   // Instantiates constant scenarios used for a given geoid
-
   const keys = Object.keys(dataset); 
   const scenarioArray = []; 
   for (let i = 0; i < keys.length; i++) {
