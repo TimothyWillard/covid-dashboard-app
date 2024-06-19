@@ -113,7 +113,10 @@ const MainGraph = ({
             const firstSeverity = scenarioMap[firstScenario.key][0];
             // '2020-07-19-21-44-47-inference'
             const dateString = firstScenario.key.substring(0, 10);
-            const dateThreshold = parseDate(dateString);
+            let dateThreshold = parseDate(dateString);
+            if (!dateThreshold) {
+                dateThreshold = parseDate(dataset[firstScenario.key].dates[0]);
+            }
 
             // firstSeverity need to be designated in case not all death rate LEVELS exist
             const dates = dataset[firstScenario.key].dates.map( d => parseDate(d));
