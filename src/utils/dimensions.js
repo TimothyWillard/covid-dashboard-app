@@ -10,7 +10,7 @@ export function getGraphContainerDimensions() {
     const graphW = (window.innerWidth * ratioW) - margin.yAxis;
 
     return [graphW, graphH]
-};
+}
 
 export function getMapContainerDimensions() {
     const ratioH = dimMultipliers.mapDesktopH;
@@ -23,4 +23,4 @@ export function getMapContainerDimensions() {
         (6 * (margin.left));
 
     return [mapContainerW, mapContainerH];
-};
+}

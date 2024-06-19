@@ -12,7 +12,7 @@ function calcQuantile(sortedArr, percentile) {
         result = sortedArr[i] + (sortedArr[i + 1] - sortedArr[i]) * fraction;
     }
     return result;
-};
+}
 
 function transformQuantiles(confObj, dates) {
     const confArray = [];
