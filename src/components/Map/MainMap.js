@@ -30,7 +30,6 @@ const MainMap = ({ geoid, dataset, indicators, width, height }) => {
     const [ fetchErrors, setFetchErrors ] = useState('');
     const [ currentDateIndex, setCurrentDateIndex ] = useState(0);
     const [ modalVisible, setModalVisible ] = useState(false);
-    // const [ firstModalVisit, setFirstModalVisit ] = useState(true);
     const firstModalVisitRef = useRef(true);
 
     function initializeMap() {
@@ -38,26 +37,39 @@ const MainMap = ({ geoid, dataset, indicators, width, height }) => {
         if (Object.keys(dataset).length > 0 &&
             Object.keys(indicatorsForMap).length > 0 &&
             Object.keys(stateBoundaries).length > 0) {
-            // instantiate scenarios and dates
-            const scenarios = buildScenarios(dataset);
-            const scenario = scenarios[0].key;       
-            const dates = dataset[scenario].dates.map( d => parseDate(d));
-          
-            // '2020-07-19-21-44-47-inference'
-            const dateString = scenario.substring(0,10)
-            const dateThreshold = parseDate(dateString)
+            // Test if we have county level data, if so we render the map
+            let countyLevelData = false;
+            const indicatorsForMapKeys = Object.keys(indicatorsForMap);
+            for (let i = 0; i < indicatorsForMapKeys.length; ++i) {
+                let stateGeoid = indicatorsForMapKeys[i];
+                let countyGeoids = Object.keys(indicatorsForMap[stateGeoid]);
+                if (countyGeoids.length > 1 || countyGeoids[0] !== stateGeoid) {
+                    countyLevelData = true;
+                    break;
+                }
+            }
+            if (countyLevelData) {
+                // instantiate scenarios and dates
+                const scenarios = buildScenarios(dataset);
+                const scenario = scenarios[0].key;       
+                const dates = dataset[scenario].dates.map( d => parseDate(d));
+            
+                // '2020-07-19-21-44-47-inference'
+                const dateString = scenario.substring(0,10)
+                const dateThreshold = parseDate(dateString)
 
-            const currentDateIndex = dates
-                .findIndex(date => formatDate(date) === formatDate(dateThreshold));
+                const currentDateIndex = dates
+                    .findIndex(date => formatDate(date) === formatDate(dateThreshold));
 
-            setDatasetMap(dataset);
-            setDates(dates);
-            setScenarios(scenarios);
-            setScenario(scenario);
-            setIndicatorsForCounty(indicatorsForMap[stateFips]);
-            setCountyBoundaries(stateBoundaries[stateFips]);
-            setCurrentDateIndex(currentDateIndex);
-            setDataLoaded(true);
+                setDatasetMap(dataset);
+                setDates(dates);
+                setScenarios(scenarios);
+                setScenario(scenario);
+                setIndicatorsForCounty(indicatorsForMap[stateFips]);
+                setCountyBoundaries(stateBoundaries[stateFips]);
+                setCurrentDateIndex(currentDateIndex);
+                setDataLoaded(true);
+            }
         } else {
             if (Object.keys(dataset).length === 0) console.log('Map Error: Dataset is empty');
             if (Object.keys(indicatorsForMap).length === 0) console.log('Map Error: indicatorsForMap is empty');
