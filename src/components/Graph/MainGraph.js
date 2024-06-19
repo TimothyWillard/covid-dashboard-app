@@ -114,6 +114,8 @@ const MainGraph = ({
             // '2020-07-19-21-44-47-inference'
             const dateString = firstScenario.key.substring(0, 10);
             let dateThreshold = parseDate(dateString);
+            // If the dateThreshold is not parsable from the scenario name fallback
+            // to using the first date in our dataset.
             if (!dateThreshold) {
                 dateThreshold = parseDate(dataset[firstScenario.key].dates[0]);
             }
