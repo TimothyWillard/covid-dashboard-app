@@ -18,7 +18,7 @@ export default function MainContainer() {
     const [ geoid, setGeoid ] = useState(-1); 
     const [ actuals, setActuals ] = useState({});
     const [ indicators, setIndicators ] = useState([]);
-    const [ , setValidGeoids ] = useState({});
+    const [ validGeoids, setValidGeoids ] = useState([]);
     const [ fetchErrors, setFetchErrors ] = useState(''); 
     const [ dataLoaded, setDataLoaded ] = useState(false);
     const [ graphW, setGraphW ] = useState(initialGraphW);
@@ -57,7 +57,11 @@ export default function MainContainer() {
             setDataset(dataset);
             setActuals(actuals);
             setIndicators(indicators);
-            setValidGeoids(validGeoids);
+            if (validGeoids && validGeoids['geoids']) {
+                setValidGeoids(validGeoids['geoids']);
+            } else {
+                setValidGeoids([]);
+            }
         }
         fetchData()
             .then(() => {
@@ -100,7 +104,8 @@ export default function MainContainer() {
             <Search
                 geoid={geoid}
                 onFileUpload={handleUpload}
-                onCountySelect={handleCountySelect}>
+                onCountySelect={handleCountySelect}
+                validGeoids={validGeoids} >
             </Search>
             { dataLoaded &&
                 <MainGraph

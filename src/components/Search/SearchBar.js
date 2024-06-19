@@ -7,7 +7,7 @@ import { GEOIDS } from '../../utils/geoids';
 
 const { Option } = Select;
 
-const SearchBar = ({ style, onCountySelect}) => {
+const SearchBar = ({ style, onCountySelect, validGeoids }) => {
     const handleCountySelect = useCallback((event) => {
         onCountySelect(event);
         if (typeof event !== 'string') {
@@ -15,8 +15,20 @@ const SearchBar = ({ style, onCountySelect}) => {
         }
     }, [ onCountySelect ]);
 
-    const children = [];
-    for (const [key, value] of Object.entries(GEOIDS).sort((a,b) => parseInt(a[0]) - parseInt(b[0]))) {
+    // If we have validGeoids use those otherwise just fallback to all geoids
+    let geoids = Object.entries(GEOIDS).sort((a,b) => parseInt(a[0]) - parseInt(b[0]));
+    if (validGeoids && validGeoids.length > 0) {
+        geoids = [];
+        for (const validGeoid of validGeoids) {
+            geoids.push([
+                validGeoid.toString(),
+                GEOIDS[validGeoid]
+            ])
+        }
+    }
+
+    let children = [];
+    for (const [key, value] of geoids) {
         const child = {
             key: `${key}-county`,
             button: []
@@ -51,6 +63,7 @@ const SearchBar = ({ style, onCountySelect}) => {
 SearchBar.propTypes = {
     style: PropTypes.object.isRequired,
     onCountySelect: PropTypes.func.isRequired,
+    validGeoids: PropTypes.arrayOf(PropTypes.string).isRequired,
 };
 
 export default SearchBar;

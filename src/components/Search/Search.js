@@ -11,7 +11,7 @@ import { ReactComponent as MapLogo } from '../../assets/globe.svg';
 
 const { Content } = Layout;
 
-const Search = ({onFileUpload, onCountySelect}) => {
+const Search = ({ onFileUpload, onCountySelect, validGeoids }) => {
     const [ showFileUpload, setShowFileUpload ] = useState(false);
 
     const handleUpload = useCallback((json, geoId) => {
@@ -85,7 +85,8 @@ const Search = ({onFileUpload, onCountySelect}) => {
                     </div>
                     <SearchBar
                         onCountySelect={onCountySelect}
-                        style={styles.SearchBar}/>
+                        style={styles.SearchBar}
+                        validGeoids={validGeoids} />
                     <Row gutter={styles.gutter} style={styles.Switch}>
                         <Switch
                             style={{ 'marginTop': '0.1rem' }}
@@ -106,6 +107,7 @@ Search.propTypes = {
     // geoid: PropTypes.string.isRequired,
     onFileUpload: PropTypes.func.isRequired,
     onCountySelect: PropTypes.func.isRequired,
+    validGeoids: PropTypes.arrayOf(PropTypes.string).isRequired,
 };
 
 export default Search;
