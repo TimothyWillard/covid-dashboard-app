@@ -1,12 +1,15 @@
 import React from 'react';
+import PropTypes from 'prop-types';
+
 import { ReactComponent as GraphLogo } from '../assets/graph.svg';
 import { ReactComponent as ChartLogo } from '../assets/chart.svg';
 import { ReactComponent as MapLogo } from '../assets/globe.svg';
 import { ReactComponent as MethodsLogo } from '../assets/book.svg';
 import { ReactComponent as AboutLogo } from '../assets/info.svg';
+
 import { styles } from '../utils/constants';
 
-export default function MenuItem({menuItem, height, active, activeClass, hoverClass, handleMouseClick}) {
+const MenuItem = ({menuItem, height, active, activeClass, hoverClass, handleMouseClick}) => {
   switch (menuItem) {
     case 0:
       return (
@@ -56,4 +59,15 @@ export default function MenuItem({menuItem, height, active, activeClass, hoverCl
     default:
       break;
   }
+};
+
+MenuItem.propTypes = {
+  menuItem: PropTypes.string.isRequired,
+  height: PropTypes.number.isRequired,
+  active: PropTypes.bool.isRequired,
+  activeClass: PropTypes.string.isRequired,
+  hoverClass: PropTypes.string.isRequired,
+  handleMouseClick: PropTypes.func.isRequired,
 }
+
+export default MenuItem;
