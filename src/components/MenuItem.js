@@ -62,7 +62,7 @@ const MenuItem = ({menuItem, height, active, activeClass, hoverClass, handleMous
 };
 
 MenuItem.propTypes = {
-  menuItem: PropTypes.string.isRequired,
+  menuItem: PropTypes.number.isRequired,
   height: PropTypes.number.isRequired,
   active: PropTypes.bool.isRequired,
   activeClass: PropTypes.string.isRequired,

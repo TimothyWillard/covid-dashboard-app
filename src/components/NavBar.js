@@ -68,7 +68,7 @@ export default function NavBar() {
                 <li key={link} className="menu-items">
                   <a href={link}>
                     <MenuItem
-                      height={index === 2 ? "36" : "40"}
+                      height={index === 2 ? 36 : 40}
                       active={active === index ? true : false}
                       activeClass={activeClass}
                       hoverClass={hoverClass}
