@@ -59,7 +59,6 @@ const Sliders = ({
         setShowTooltipDateThreshold(!showTooltipDateThreshold);
     }, [ showTooltipDateThreshold ]);
 
-    // let dateIdx = '150';
     let stepVal = 0;
     let val = addCommas(indicatorThreshold.toString());
     if (seriesMax && indicatorThreshold) {
