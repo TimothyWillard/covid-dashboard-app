@@ -188,6 +188,7 @@ const Brush = ({
         };
     }, [ brush, width, height, onBrushStart, brushEnded, brushed ]);
 
+    /* eslint-disable react-hooks/exhaustive-deps */
     useEffect(() => {
         if (width !== stateWidth || height !== stateHeight) {
             updateSimPaths(series, dates, width, height, dateRange, showConfBounds, false);
@@ -201,6 +202,7 @@ const Brush = ({
     useEffect(() => {
         setupBrush();
     }, []);
+    /* eslint-enable react-hooks/exhaustive-deps */
 
     return (
         <div className='brush-wrapper'>
